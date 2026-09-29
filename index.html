@@ -1,875 +1,1745 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
+
   <base target="_top">
+
   <meta charset="UTF-8">
 
+
+
   <meta
+
     name="viewport"
+
     content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+
   >
+
+
 
   <title>樵玟出貨掃碼</title>
 
+
+
   <style>
+
     :root {
+
       --bg: #f3f5f7;
+
       --card: #ffffff;
+
       --text: #202124;
+
       --sub: #687078;
+
       --border: #dfe3e7;
 
+
+
       --blue: #1558a6;
+
       --blue-bg: #e8f1ff;
 
+
+
       --green: #117333;
+
       --green-bg: #dcf3e3;
 
+
+
       --red: #b3261e;
+
       --red-bg: #fde2df;
 
+
+
       --purple: #6d28a8;
+
       --purple-bg: #f2e7ff;
+
     }
+
+
 
     * {
+
       box-sizing: border-box;
+
       -webkit-tap-highlight-color: transparent;
+
     }
+
+
 
     html,
+
     body {
+
       margin: 0;
+
       width: 100%;
+
       min-height: 100%;
+
       background: var(--bg);
+
       color: var(--text);
 
+
+
       font-family:
+
         Arial,
+
         "Microsoft JhengHei",
+
         sans-serif;
 
+
+
       -webkit-text-size-adjust: 100%;
+
       text-size-adjust: 100%;
+
     }
+
+
 
     body {
+
       padding:
+
         max(8px, env(safe-area-inset-top))
+
         8px
+
         max(92px, calc(78px + env(safe-area-inset-bottom)));
+
     }
+
+
 
     .app {
+
       width: 100%;
+
       min-width: 100%;
+
       max-width: none;
+
       margin: 0;
+
       padding: 0;
+
     }
+
+
 
     .header {
+
       text-align: center;
+
       padding: 4px 4px 10px;
+
     }
+
+
 
     .header-title {
+
       margin: 0;
+
       font-size: 25px;
+
       font-weight: 900;
+
     }
+
+
 
     .header-sub {
+
       margin-top: 4px;
+
       color: var(--sub);
+
       font-size: 14px;
+
     }
 
+
+
     /* =========================
+
        模式選擇
+
     ========================= */
+
+
 
     .mode-card {
+
       background: #fff;
+
       border: 1px solid var(--border);
+
       border-radius: 18px;
+
       padding: 14px;
+
       margin-bottom: 10px;
+
     }
+
+
 
     .mode-title {
+
       text-align: center;
+
       font-size: 17px;
+
       font-weight: 900;
+
       margin-bottom: 10px;
+
     }
+
+
 
     .mode-buttons {
+
       display: grid;
+
       grid-template-columns: 1fr 1fr;
+
       gap: 9px;
+
     }
+
+
 
     .mode-btn {
+
       min-height: 58px;
+
       border: 2px solid #d6dbe0;
+
       border-radius: 14px;
+
       background: #fff;
+
       color: #333;
+
       font-size: 17px;
+
       font-weight: 900;
+
     }
+
+
 
     .mode-btn.active {
+
       border-color: #1a73e8;
+
       background: #e8f0fe;
+
       color: #174ea6;
+
     }
 
+
+
     /* =========================
+
        狀態
+
     ========================= */
+
+
 
     .status {
+
       width: 100%;
+
       border-radius: 20px;
+
       padding: 24px 12px;
+
       text-align: center;
+
       margin-bottom: 10px;
+
     }
+
+
 
     .status.waiting {
+
       background: var(--blue-bg);
+
       color: var(--blue);
+
     }
+
+
 
     .status.success {
+
       background: var(--green-bg);
+
       color: var(--green);
+
     }
+
+
 
     .status.error {
+
       background: var(--red-bg);
+
       color: var(--red);
+
     }
+
+
 
     .status.learning {
+
       background: var(--purple-bg);
+
       color: var(--purple);
+
     }
+
+
 
     .status-title {
+
       font-size: 32px;
+
       line-height: 1.2;
+
       font-weight: 900;
+
     }
+
+
 
     .status-message {
+
       margin-top: 8px;
+
       font-size: 19px;
+
       line-height: 1.45;
+
       font-weight: 800;
+
       word-break: break-word;
+
     }
 
+
+
     /* =========================
+
        數字統計
+
     ========================= */
+
+
 
     .summary {
+
       width: 100%;
+
       display: grid;
+
       grid-template-columns: repeat(3, 1fr);
+
       gap: 7px;
+
       margin-bottom: 10px;
+
     }
+
+
 
     .summary-box {
+
       background: #fff;
+
       border: 1px solid var(--border);
+
       border-radius: 15px;
+
       padding: 10px 3px;
+
       text-align: center;
+
     }
+
+
 
     .summary-label {
+
       color: var(--sub);
+
       font-size: 14px;
+
     }
+
+
 
     .summary-value {
+
       margin-top: 2px;
+
       font-size: 30px;
+
       line-height: 1.2;
+
       font-weight: 900;
+
     }
 
+
+
     /* =========================
+
        一般卡片
+
     ========================= */
+
+
 
     .card {
+
       width: 100%;
+
       background: #fff;
+
       border: 1px solid var(--border);
+
       border-radius: 17px;
+
       padding: 14px;
+
       margin-bottom: 10px;
+
     }
+
+
 
     .section-title {
+
       font-size: 19px;
+
       font-weight: 900;
+
       margin-bottom: 9px;
+
     }
+
+
 
     .empty {
+
       color: var(--sub);
+
       font-size: 16px;
+
       padding: 5px 0;
+
     }
 
+
+
     /* =========================
+
        商品
+
     ========================= */
+
+
 
     .item {
+
       border: 1px solid var(--border);
+
       border-radius: 15px;
+
       padding: 14px;
+
       margin-bottom: 9px;
+
       background: #fff;
+
     }
+
+
 
     .item:last-child {
+
       margin-bottom: 0;
+
     }
+
+
 
     .item.done {
+
       background: #e5f5e9;
+
       border-color: #8bc89b;
+
     }
+
+
 
     .item-top {
+
       display: flex;
+
       justify-content: space-between;
+
       align-items: flex-start;
+
       gap: 8px;
+
     }
+
+
 
     .item-name {
+
       font-size: 24px;
+
       font-weight: 900;
+
       line-height: 1.25;
+
     }
+
+
 
     .item-code {
+
       margin-top: 4px;
+
       font-size: 15px;
+
       color: var(--sub);
+
     }
+
+
 
     .item-count {
+
       flex-shrink: 0;
+
       min-width: 84px;
+
       text-align: right;
+
       font-size: 32px;
+
       font-weight: 900;
+
     }
+
+
 
     .progress {
+
       margin-top: 10px;
+
       width: 100%;
+
       height: 14px;
+
       background: #e7eaed;
+
       border-radius: 999px;
+
       overflow: hidden;
+
     }
+
+
 
     .progress-bar {
+
       height: 100%;
+
       width: 0;
+
       background: #188038;
+
       border-radius: 999px;
+
       transition: width .15s;
+
     }
 
+
+
     /* =========================
+
        託運單
+
     ========================= */
+
+
 
     .order-row {
+
       padding: 10px 0;
+
       border-bottom: 1px solid #eee;
+
       font-size: 15px;
+
       line-height: 1.45;
+
       word-break: break-word;
+
     }
+
+
 
     .order-row:last-child {
+
       border-bottom: 0;
+
     }
 
+
+
     /* =========================
+
        箱裝
+
     ========================= */
+
+
 
     .ignored {
+
       background: #f5f6f7;
+
       border-radius: 10px;
+
       padding: 9px;
+
       margin-bottom: 6px;
+
       color: #6e747a;
+
       font-size: 14px;
+
       line-height: 1.4;
+
     }
 
+
+
     /* =========================
+
        學習
+
     ========================= */
+
+
 
     .learning-box {
+
       display: none;
+
       background: #faf5ff;
+
       border: 2px solid #a979d6;
+
       border-radius: 17px;
+
       padding: 14px;
+
       margin-bottom: 10px;
+
     }
+
+
 
     .learning-box.show {
+
       display: block;
+
     }
+
+
 
     .learning-title {
+
       font-size: 22px;
+
       font-weight: 900;
+
       color: var(--purple);
+
       margin-bottom: 10px;
+
     }
+
+
 
     .learning-line {
+
       font-size: 17px;
+
       line-height: 1.5;
+
       margin-bottom: 5px;
+
       word-break: break-all;
+
     }
 
+
+
     /* =========================
+
        相機
+
     ========================= */
+
+
 
     .camera-card {
+
       display: none;
+
       width: 100%;
+
       background: #111;
+
       border-radius: 18px;
+
       overflow: hidden;
+
       margin-bottom: 10px;
+
       position: relative;
+
     }
+
+
 
     .camera-card.show {
+
       display: block;
+
     }
+
+
 
     #cameraVideo {
+
       width: 100%;
+
       height: 52vh;
+
       min-height: 300px;
+
       max-height: 520px;
+
       display: block;
+
       object-fit: cover;
+
       background: #000;
+
     }
+
+
 
     .scan-frame {
+
       position: absolute;
+
       left: 10%;
+
       right: 10%;
+
       top: 35%;
+
       height: 30%;
 
+
+
       border: 3px solid #fff;
+
       border-radius: 15px;
 
+
+
       box-shadow:
+
         0 0 0 9999px rgba(0,0,0,.32);
 
+
+
       pointer-events: none;
+
     }
+
+
 
     .scan-line {
+
       position: absolute;
+
       left: 5%;
+
       right: 5%;
+
       top: 50%;
+
       height: 2px;
+
       background: #ff3b30;
+
     }
+
+
 
     .camera-label {
+
       position: absolute;
+
       top: 12px;
+
       left: 50%;
+
       transform: translateX(-50%);
 
+
+
       background: rgba(0,0,0,.65);
+
       color: #fff;
 
+
+
       padding: 7px 12px;
+
       border-radius: 999px;
 
+
+
       font-size: 15px;
+
       font-weight: 800;
+
       white-space: nowrap;
+
     }
+
+
 
     .camera-actions {
+
       padding: 10px;
+
       display: grid;
+
       grid-template-columns: 1fr;
+
       background: #111;
+
     }
 
+
+
     /* =========================
+
        按鈕
+
     ========================= */
+
+
 
     button {
+
       border: 0;
+
       cursor: pointer;
+
       font-family: inherit;
+
     }
+
+
 
     .btn {
+
       min-height: 52px;
+
       border-radius: 13px;
+
       padding: 11px 12px;
+
       font-size: 17px;
+
       font-weight: 900;
+
     }
+
+
 
     .btn-green {
+
       background: #188038;
+
       color: white;
+
     }
+
+
 
     .btn-gray {
+
       background: #5f6368;
+
       color: white;
+
     }
+
+
 
     .btn-red {
+
       background: #d93025;
+
       color: white;
+
     }
+
+
 
     .btn-blue {
+
       background: #1a73e8;
+
       color: white;
+
     }
+
+
 
     .two-buttons {
+
       display: grid;
+
       grid-template-columns: 1fr 1fr;
+
       gap: 8px;
+
       margin-top: 12px;
+
     }
 
+
+
     /* =========================
+
        歷史
+
     ========================= */
+
+
 
     .history-row {
+
       padding: 9px 0;
+
       border-bottom: 1px solid #eee;
+
       font-size: 14px;
+
       line-height: 1.4;
+
       word-break: break-word;
+
     }
+
+
 
     .history-ok {
+
       color: #117333;
+
     }
+
+
 
     .history-error {
+
       color: #b3261e;
+
     }
+
+
 
     .history-info {
+
       color: #174ea6;
+
     }
+
+
 
     /* =========================
+
        底部固定操作列
+
     ========================= */
 
+
+
     .bottom-bar {
+
       position: fixed;
+
       z-index: 100;
 
+
+
       left: 0;
+
       right: 0;
+
       bottom: 0;
 
+
+
       padding:
+
         8px
+
         8px
+
         max(8px, env(safe-area-inset-bottom));
 
+
+
       background: rgba(255,255,255,.96);
+
       backdrop-filter: blur(8px);
 
+
+
       border-top: 1px solid #d9dcdf;
+
     }
+
+
 
     .bottom-buttons {
+
       width: 100%;
+
       display: grid;
+
       grid-template-columns: 1fr 1fr;
+
       gap: 7px;
+
     }
+
+
 
     #scannerInput {
+
       position: fixed;
+
       left: -10000px;
+
       top: -10000px;
+
       opacity: 0;
+
     }
+
+
 
     @media (min-width: 800px) {
+
       body {
+
         padding-left: 14px;
+
         padding-right: 14px;
+
       }
 
+
+
       .app,
+
       .bottom-buttons {
+
         max-width: 900px;
+
         margin-left: auto;
+
         margin-right: auto;
+
       }
+
     }
+
   </style>
+
 </head>
+
+
 
 <body>
 
+
+
 <div class="app">
 
+
+
   <div class="header">
+
     <h1 class="header-title">
+
       樵玟 出貨掃碼
+
     </h1>
 
+
+
     <div class="header-sub">
+
       託運單 → 商品 → 數量確認
+
     </div>
+
   </div>
+
+
+
 
 
   <!-- 掃描模式 -->
 
+
+
   <div class="mode-card">
 
+
+
     <div class="mode-title">
+
       掃描方式
+
     </div>
+
+
 
     <div class="mode-buttons">
 
-      <button
-        id="gunModeBtn"
-        class="mode-btn active"
-        onclick="selectGunMode()"
-      >
-        🔫 掃碼槍
-      </button>
+
 
       <button
-        id="cameraModeBtn"
-        class="mode-btn"
-        onclick="selectCameraMode()"
+
+        id="gunModeBtn"
+
+        class="mode-btn active"
+
+        onclick="selectGunMode()"
+
       >
-        📷 手機相機
+
+        🔫 掃碼槍
+
       </button>
+
+
+
+      <button
+
+        id="cameraModeBtn"
+
+        class="mode-btn"
+
+        onclick="selectCameraMode()"
+
+      >
+
+        📷 手機相機
+
+      </button>
+
+
 
     </div>
 
+
+
   </div>
+
+
+
 
 
   <!-- 手機相機 -->
 
+
+
   <div
+
     id="cameraCard"
+
     class="camera-card"
+
   >
 
+
+
     <video
+
       id="cameraVideo"
+
       autoplay
+
       playsinline
+
       muted
+
     ></video>
 
+
+
     <div class="scan-frame">
+
       <div class="scan-line"></div>
+
     </div>
 
+
+
     <div
+
       id="cameraLabel"
+
       class="camera-label"
+
     >
+
       對準條碼
+
     </div>
+
+
 
     <div class="camera-actions">
 
+
+
       <button
+
         class="btn btn-gray"
+
         onclick="stopCamera()"
+
       >
+
         關閉相機
+
       </button>
+
+
 
     </div>
 
+
+
   </div>
+
+
+
 
 
   <!-- 主要狀態 -->
 
+
+
   <div
+
     id="status"
+
     class="status waiting"
+
   >
 
-    <div
-      id="statusTitle"
-      class="status-title"
-    >
-      系統啟動中
-    </div>
+
 
     <div
-      id="statusMessage"
-      class="status-message"
+
+      id="statusTitle"
+
+      class="status-title"
+
     >
-      正在讀取商品資料
+
+      系統啟動中
+
     </div>
+
+
+
+    <div
+
+      id="statusMessage"
+
+      class="status-message"
+
+    >
+
+      正在讀取商品資料
+
+    </div>
+
+
 
   </div>
+
+
+
 
 
   <!-- 數字 -->
 
+
+
   <div class="summary">
 
+
+
     <div class="summary-box">
 
+
+
       <div class="summary-label">
+
         託運單
+
       </div>
 
+
+
       <div
+
         id="orderCount"
+
         class="summary-value"
+
       >
+
         0
+
       </div>
+
+
 
     </div>
 
 
+
+
+
     <div class="summary-box">
 
+
+
       <div class="summary-label">
+
         應掃
+
       </div>
+
+
 
       <div
+
         id="requiredCount"
+
         class="summary-value"
+
       >
+
         0
+
       </div>
 
+
+
     </div>
+
+
+
 
 
     <div class="summary-box">
 
+
+
       <div class="summary-label">
+
         已掃
+
       </div>
+
+
 
       <div
+
         id="scannedCount"
+
         class="summary-value"
+
       >
+
         0
+
       </div>
 
+
+
     </div>
+
+
 
   </div>
+
+
+
 
 
   <!-- 商品 -->
 
+
+
   <div class="card">
 
+
+
     <div class="section-title">
+
       待掃商品
+
     </div>
+
+
 
     <div id="itemsArea">
 
+
+
       <div class="empty">
+
         尚未掃描託運單
+
       </div>
+
+
 
     </div>
 
+
+
   </div>
+
+
+
 
 
   <!-- 新品學習 -->
 
+
+
   <div
+
     id="learningBox"
+
     class="learning-box"
+
   >
 
+
+
     <div class="learning-title">
+
       新商品學習
+
     </div>
 
+
+
     <div class="learning-line">
+
       出貨名稱：
+
       <strong id="learnName"></strong>
+
     </div>
 
+
+
     <div class="learning-line">
+
       商品條碼：
+
       <strong id="learnBarcode"></strong>
+
     </div>
+
+
 
     <div class="two-buttons">
 
-      <button
-        class="btn btn-green"
-        onclick="confirmLearning()"
-      >
-        確認建立
-      </button>
+
 
       <button
-        class="btn btn-gray"
-        onclick="cancelLearning()"
+
+        class="btn btn-green"
+
+        onclick="confirmLearning()"
+
       >
-        取消
+
+        確認建立
+
       </button>
+
+
+
+      <button
+
+        class="btn btn-gray"
+
+        onclick="cancelLearning()"
+
+      >
+
+        取消
+
+      </button>
+
+
 
     </div>
 
+
+
   </div>
+
+
+
 
 
   <!-- 託運單 -->
 
+
+
   <div class="card">
 
+
+
     <div class="section-title">
+
       本批託運單
+
     </div>
+
+
 
     <div id="ordersArea">
 
+
+
       <div class="empty">
+
         尚未掃描
+
       </div>
+
+
 
     </div>
 
+
+
   </div>
+
+
+
 
 
   <!-- 箱裝 -->
 
+
+
   <div
+
     id="ignoredSection"
+
     class="card"
+
     style="display:none;"
+
   >
 
+
+
     <div class="section-title">
+
       箱裝項目
+
     </div>
+
+
 
     <div id="ignoredArea"></div>
 
+
+
   </div>
+
+
+
 
 
   <!-- 紀錄 -->
 
+
+
   <div class="card">
 
+
+
     <div class="section-title">
+
       最近掃描
+
     </div>
+
+
 
     <div id="historyArea">
 
+
+
       <div class="empty">
+
         尚無紀錄
+
       </div>
+
+
 
     </div>
 
+
+
   </div>
 
+
+
 </div>
+
+
+
 
 
 <!-- 固定底部 -->
 
+
+
 <div class="bottom-bar">
+
+
 
   <div class="bottom-buttons">
 
-    <button
-      class="btn btn-red"
-      onclick="clearBatch(true)"
-    >
-      清除批次
-    </button>
+
 
     <button
-      class="btn btn-gray"
-      onclick="reloadBarcodeMap()"
+
+      class="btn btn-red"
+
+      onclick="clearBatch(true)"
+
     >
-      更新資料
+
+      清除批次
+
     </button>
+
+
+
+    <button
+
+      class="btn btn-gray"
+
+      onclick="reloadBarcodeMap()"
+
+    >
+
+      更新資料
+
+    </button>
+
+
 
   </div>
+
+
 
 </div>
 
 
+
+
+
 <input
+
   id="scannerInput"
+
   autocomplete="off"
+
   autofocus
+
 >
 
 
-<script src="https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js"></script>
+
+
+
 <script>
+
 
 /* =========================================================
    Vercel API
@@ -888,6 +1758,7 @@ async function apiCall(action, payload = {}) {
   });
 
   let result;
+
   try {
     result = await response.json();
   } catch (error) {
@@ -895,1050 +1766,2728 @@ async function apiCall(action, payload = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(result.message || ('API 錯誤 HTTP ' + response.status));
+    throw new Error(
+      result.message ||
+      ('API 錯誤 HTTP ' + response.status)
+    );
   }
 
   return result;
 }
 
+
+
+
 /* =========================================================
+
    系統狀態
+
 ========================================================= */
 
+
+
 let products = [];
+
 let barcodeMap = {};
+
 let shippingNameMap = {};
 
+
+
 let currentOrders = [];
+
 let requiredItems = {};
+
 let scannedItems = {};
+
 let ignoredItems = [];
+
 let historyData = [];
+
+
 
 let busy = false;
 
+
+
 let learningMode = false;
+
 let pendingLearningName = '';
+
 let pendingLearningBarcode = '';
+
+
 
 let batchCompleted = false;
 
 
+
+
+
 /* =========================================================
+
    相機
+
 ========================================================= */
 
+
+
 let cameraStream = null;
+
 let cameraRunning = false;
+
 let barcodeDetector = null;
-let zxingReader = null;
+
+
 
 let lastCameraCode = '';
+
 let lastCameraTime = 0;
+
+
 
 let cameraScanTimer = null;
 
 
+
+/*
+
+  託運單相機二次確認
+
+*/
+
+let cameraTrackingCandidate = '';
+
+let cameraTrackingCandidateCount = 0;
+
+let cameraTrackingCandidateTime = 0;
+
+
+
+
+
 /* =========================================================
+
    啟動
+
 ========================================================= */
 
+
+
 window.addEventListener(
+
   'load',
+
   function() {
+
+
 
     reloadBarcodeMap();
 
+
+
     focusScanner();
 
+
+
   }
+
 );
 
 
+
+
+
 /* =========================================================
+
    模式
+
 ========================================================= */
+
+
 
 function selectGunMode() {
 
+
+
   stopCamera();
 
-  document
-    .getElementById(
-      'gunModeBtn'
-    )
-    .classList.add(
-      'active'
-    );
+
 
   document
+
     .getElementById(
-      'cameraModeBtn'
+
+      'gunModeBtn'
+
     )
-    .classList.remove(
+
+    .classList.add(
+
       'active'
+
     );
+
+
+
+  document
+
+    .getElementById(
+
+      'cameraModeBtn'
+
+    )
+
+    .classList.remove(
+
+      'active'
+
+    );
+
+
+
 
 
   focusScanner();
 
 
+
+
+
   if (
+
     currentOrders.length === 0
+
   ) {
 
+
+
     setStatus(
+
       'waiting',
+
       '掃碼槍模式',
+
       '請掃描託運單'
+
     );
 
+
+
   }
+
 }
+
+
+
 
 
 async function selectCameraMode() {
 
-  document
-    .getElementById(
-      'cameraModeBtn'
-    )
-    .classList.add(
-      'active'
-    );
+
 
   document
+
     .getElementById(
-      'gunModeBtn'
+
+      'cameraModeBtn'
+
     )
-    .classList.remove(
+
+    .classList.add(
+
       'active'
+
     );
+
+
+
+  document
+
+    .getElementById(
+
+      'gunModeBtn'
+
+    )
+
+    .classList.remove(
+
+      'active'
+
+    );
+
+
+
 
 
   await startCamera();
+
 }
+
+
+
 
 
 /* =========================================================
+
    手機相機
+
 ========================================================= */
 
+
+
 async function startCamera() {
+
+
+
   if (cameraRunning) {
+
     return;
+
   }
+
+
+
+
 
   if (
+
     !navigator.mediaDevices ||
+
     !navigator.mediaDevices.getUserMedia
+
   ) {
+
+
+
     showError(
+
       '無法使用相機',
+
       '此瀏覽器不支援相機掃碼'
+
     );
+
+
+
     return;
+
   }
 
-  try {
-    const video =
-      document.getElementById('cameraVideo');
 
-    cameraStream =
-      await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        },
-        audio: false
+
+
+
+  if (
+
+    !('BarcodeDetector' in window)
+
+  ) {
+
+
+
+    showError(
+
+      '瀏覽器不支援',
+
+      '此手機瀏覽器目前無法直接辨識條碼，請改用 Chrome 或掃碼槍'
+
+    );
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  try {
+
+
+
+    const supportedFormats =
+
+      await BarcodeDetector
+
+        .getSupportedFormats();
+
+
+
+
+
+const wantedFormats = [
+
+  'code_128',
+
+  'ean_13',
+
+  'ean_8',
+
+  'upc_a',
+
+  'upc_e',
+
+  'itf'
+
+];
+
+
+
+
+
+    const formats =
+
+      wantedFormats.filter(
+
+        format =>
+
+          supportedFormats.includes(
+
+            format
+
+          )
+
+      );
+
+
+
+
+
+    barcodeDetector =
+
+      new BarcodeDetector({
+
+        formats:
+
+          formats.length
+
+            ? formats
+
+            : supportedFormats
+
       });
 
-    video.srcObject = cameraStream;
+
+
+
+
+    cameraStream =
+
+      await navigator
+
+        .mediaDevices
+
+        .getUserMedia({
+
+
+
+          video: {
+
+
+
+            facingMode: {
+
+              ideal: 'environment'
+
+            },
+
+
+
+            width: {
+
+              ideal: 1920
+
+            },
+
+
+
+            height: {
+
+              ideal: 1080
+
+            }
+
+
+
+          },
+
+
+
+          audio: false
+
+
+
+        });
+
+
+
+
+
+    const video =
+
+      document.getElementById(
+
+        'cameraVideo'
+
+      );
+
+
+
+
+
+    video.srcObject =
+
+      cameraStream;
+
+
+
+
+
     await video.play();
+
+
+
+
 
     cameraRunning = true;
 
-    document
-      .getElementById('cameraCard')
-      .classList.add('show');
+
+
+
 
     document
-      .getElementById('cameraLabel')
-      .textContent = '對準條碼';
 
-    setStatus(
-      'waiting',
-      '相機掃描中',
-      currentOrders.length
-        ? '請掃描商品'
-        : '請掃描託運單'
-    );
+      .getElementById(
 
-    // 優先使用瀏覽器原生 BarcodeDetector。
-    if ('BarcodeDetector' in window) {
-      const supportedFormats =
-        await BarcodeDetector.getSupportedFormats();
+        'cameraCard'
 
-      const wantedFormats = [
-        'code_128',
-        'code_39',
-        'ean_13',
-        'ean_8',
-        'upc_a',
-        'upc_e',
-        'itf',
-        'qr_code',
-        'data_matrix'
-      ];
+      )
 
-      const formats =
-        wantedFormats.filter(
-          format => supportedFormats.includes(format)
-        );
+      .classList.add(
 
-      barcodeDetector =
-        new BarcodeDetector({
-          formats:
-            formats.length
-              ? formats
-              : supportedFormats
-        });
+        'show'
 
-      cameraLoop();
-      return;
-    }
-
-    // 原生辨識不可用時，使用 ZXing fallback。
-    if (
-      window.ZXingBrowser &&
-      window.ZXingBrowser.BrowserMultiFormatReader
-    ) {
-      zxingReader =
-        new ZXingBrowser.BrowserMultiFormatReader();
-
-      zxingReader.decodeFromVideoDevice(
-        undefined,
-        video,
-        function(result) {
-          if (!cameraRunning || !result) {
-            return;
-          }
-
-          const code =
-            result.getText
-              ? result.getText()
-              : String(result.text || '');
-
-          if (code) {
-            onCameraBarcode(code);
-          }
-        }
       );
 
-      return;
-    }
 
-    stopCamera();
 
-    showError(
-      '瀏覽器不支援',
-      '無法辨識條碼，請改用 Chrome、支援 BarcodeDetector 的瀏覽器或掃碼槍'
+
+
+    document
+
+      .getElementById(
+
+        'cameraLabel'
+
+      )
+
+      .textContent =
+
+        '對準條碼';
+
+
+
+
+
+    setStatus(
+
+      'waiting',
+
+      '相機掃描中',
+
+      currentOrders.length
+
+        ? '請掃描商品'
+
+        : '請掃描託運單'
+
     );
-  } catch (error) {
-    stopCamera();
 
-    showError(
-      '相機開啟失敗',
-      error.message || '請確認已允許相機權限'
-    );
+
+
+
+
+    cameraLoop();
+
+
+
   }
+
+
+
+  catch (error) {
+
+
+
+    showError(
+
+      '相機開啟失敗',
+
+      '請確認已允許相機權限'
+
+    );
+
+
+
+  }
+
 }
+
+
 
 
 
 function cameraLoop() {
 
+
+
   if (!cameraRunning) {
+
     return;
+
   }
 
 
+
+
+
   const video =
+
     document.getElementById(
+
       'cameraVideo'
+
     );
 
 
+
+
+
   if (
+
     video.readyState >= 2 &&
+
     barcodeDetector
+
   ) {
 
+
+
     barcodeDetector
+
       .detect(video)
+
       .then(
+
         codes => {
 
+
+
           if (
+
             codes &&
+
             codes.length > 0
+
           ) {
 
+
+
             const code =
+
               String(
+
                 codes[0]
+
                   .rawValue || ''
+
               ).trim();
+
+
+
 
 
             if (code) {
 
+
+
               onCameraBarcode(
+
                 code
+
               );
 
+
+
             }
+
           }
 
+
+
         }
+
       )
+
       .catch(
+
         function() {}
+
       );
 
+
+
   }
+
+
+
 
 
   cameraScanTimer =
+
     setTimeout(
+
       cameraLoop,
+
       180
+
     );
+
 }
 
 
-function onCameraBarcode(
-  code
-) {
-
-  const now =
-    Date.now();
 
 
-  /*
-    相同條碼短時間不重複計數
-  */
 
-  if (
-    code === lastCameraCode &&
-    now - lastCameraTime < 1300
-  ) {
+function onCameraBarcode(code) {
+
+
+
+  const value =
+
+    normalizeBarcode(code);
+
+
+
+  if (!value) {
 
     return;
+
   }
 
 
+
+  const now = Date.now();
+
+
+
+
+
   /*
-    系統正在查資料也不再送一次
+
+    系統正在查詢時
+
+    不再送下一筆
+
   */
 
   if (busy) {
+
     return;
+
   }
 
 
-  lastCameraCode =
-    code;
 
-  lastCameraTime =
-    now;
+
+
+  /*
+
+    =====================================================
+
+    已知商品條碼
+
+    =====================================================
+
+
+
+    商品條碼已經存在 barcodeMap
+
+    直接交給商品掃描。
+
+
+
+    同一商品 1.3 秒內不重複計數。
+
+  */
+
+  if (
+
+    barcodeMap[value]
+
+  ) {
+
+
+
+    if (
+
+      value === lastCameraCode &&
+
+      now - lastCameraTime < 1300
+
+    ) {
+
+
+
+      return;
+
+    }
+
+
+
+    lastCameraCode = value;
+
+    lastCameraTime = now;
+
+
+
+    document
+
+      .getElementById('cameraLabel')
+
+      .textContent =
+
+        '已讀取：' + value;
+
+
+
+    handleScan(
+
+      value,
+
+      'camera'
+
+    );
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    =====================================================
+
+    新品學習模式
+
+    =====================================================
+
+
+
+    此時掃的是商品條碼，
+
+    商品條碼不限制 12 碼。
+
+  */
+
+  if (learningMode) {
+
+
+
+    if (
+
+      value === lastCameraCode &&
+
+      now - lastCameraTime < 1300
+
+    ) {
+
+
+
+      return;
+
+    }
+
+
+
+    lastCameraCode = value;
+
+    lastCameraTime = now;
+
+
+
+    handleScan(
+
+      value,
+
+      'camera'
+
+    );
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    =====================================================
+
+    託運單必須：
+
+    12 碼 + 全部都是數字
+
+    =====================================================
+
+  */
+
+  const isTrackingNumber =
+
+    /^\d{12}$/.test(value);
+
+
+
+
+
+  /*
+
+    不是 12 碼純數字
+
+    相機直接忽略。
+
+
+
+    不查 API。
+
+    不顯示錯誤。
+
+    不加入最近掃描。
+
+  */
+
+  if (!isTrackingNumber) {
+
+
+
+    /*
+
+      但如果目前有新品等待建檔，
+
+      這時允許把非12碼資料當商品條碼。
+
+    */
+
+    const unknownName =
+
+      getFirstUnknownRequiredItem();
+
+
+
+    if (
+
+      currentOrders.length > 0 &&
+
+      unknownName
+
+    ) {
+
+
+
+      startLearning(
+
+        unknownName,
+
+        value
+
+      );
+
+
+
+    }
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    =====================================================
+
+    已成功接受過的同一張託運單
+
+    2.5 秒內不再處理
+
+    =====================================================
+
+  */
+
+  if (
+
+    value === lastCameraCode &&
+
+    now - lastCameraTime < 2500
+
+  ) {
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    =====================================================
+
+    託運單相機二次確認
+
+    =====================================================
+
+
+
+    必須連續兩次辨識成同一個 12 碼，
+
+    才真的查詢。
+
+
+
+    避免相機瞬間誤判。
+
+  */
+
+
+
+  if (
+
+    cameraTrackingCandidate === value &&
+
+    now - cameraTrackingCandidateTime < 1800
+
+  ) {
+
+
+
+    cameraTrackingCandidateCount += 1;
+
+
+
+  }
+
+  else {
+
+
+
+    cameraTrackingCandidate = value;
+
+    cameraTrackingCandidateCount = 1;
+
+
+
+  }
+
+
+
+
+
+  cameraTrackingCandidateTime = now;
+
+
+
+
+
+  /*
+
+    第一次看到
+
+    先不查詢
+
+  */
+
+  if (
+
+    cameraTrackingCandidateCount < 2
+
+  ) {
+
+
+
+    document
+
+      .getElementById('cameraLabel')
+
+      .textContent =
+
+        '確認中：' + value;
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    已經連續確認兩次
+
+  */
+
+  cameraTrackingCandidate = '';
+
+  cameraTrackingCandidateCount = 0;
+
+  cameraTrackingCandidateTime = 0;
+
+
+
+  lastCameraCode = value;
+
+  lastCameraTime = now;
+
+
+
 
 
   document
-    .getElementById(
-      'cameraLabel'
-    )
+
+    .getElementById('cameraLabel')
+
     .textContent =
-      '已讀取：' + code;
+
+      '已讀取：' + value;
+
+
+
 
 
   handleScan(
-    code
+
+    value,
+
+    'camera'
+
   );
+
+
+
 
 
   setTimeout(
+
     function() {
+
+
 
       if (cameraRunning) {
 
+
+
         document
-          .getElementById(
-            'cameraLabel'
-          )
+
+          .getElementById('cameraLabel')
+
           .textContent =
+
             '對準下一個條碼';
+
+
 
       }
 
+
+
     },
+
     700
+
   );
+
+
+
 }
+
+
+
 
 
 function stopCamera() {
+
+
+
   cameraRunning = false;
 
+
+
+
+
   if (cameraScanTimer) {
-    clearTimeout(cameraScanTimer);
-    cameraScanTimer = null;
+
+
+
+    clearTimeout(
+
+      cameraScanTimer
+
+    );
+
+
+
+    cameraScanTimer =
+
+      null;
+
   }
 
-  try {
-    if (
-      zxingReader &&
-      typeof zxingReader.reset === 'function'
-    ) {
-      zxingReader.reset();
-    }
-  } catch (e) {}
 
-  zxingReader = null;
-  barcodeDetector = null;
+
+
 
   if (cameraStream) {
+
+
+
     cameraStream
+
       .getTracks()
+
       .forEach(
-        track => track.stop()
+
+        track =>
+
+          track.stop()
+
       );
 
-    cameraStream = null;
+
+
+
+
+    cameraStream =
+
+      null;
+
   }
 
-  const video =
-    document.getElementById('cameraVideo');
 
-  video.srcObject = null;
+
+
+
+  const video =
+
+    document.getElementById(
+
+      'cameraVideo'
+
+    );
+
+
+
+
+
+  video.srcObject =
+
+    null;
+
+
+
+
 
   document
-    .getElementById('cameraCard')
-    .classList.remove('show');
+
+    .getElementById(
+
+      'cameraCard'
+
+    )
+
+    .classList.remove(
+
+      'show'
+
+    );
+
+
+
+
 
   lastCameraCode = '';
+
   lastCameraTime = 0;
+
 }
+
+
 
 
 
 /* =========================================================
+
    掃碼槍
+
 ========================================================= */
 
+
+
 const scannerInput =
+
   document.getElementById(
+
     'scannerInput'
+
   );
 
 
+
+
+
 scannerInput.addEventListener(
+
   'keydown',
+
   function(event) {
 
+
+
     if (
+
       event.key !== 'Enter'
+
     ) {
+
       return;
+
     }
+
+
+
 
 
     event.preventDefault();
 
 
+
+
+
     const value =
+
       scannerInput
+
         .value
+
         .trim();
+
+
+
 
 
     scannerInput.value = '';
 
 
+
+
+
     if (!value) {
+
       return;
+
     }
 
 
+
+
+
     handleScan(
-      value
+
+      value,
+
+     'scanner'
+
     );
 
+
+
   }
+
 );
+
+
+
 
 
 function focusScanner() {
 
+
+
   if (cameraRunning) {
+
     return;
+
   }
+
+
+
 
 
   setTimeout(
+
     function() {
+
+
 
       scannerInput.focus();
 
+
+
     },
+
     50
+
   );
+
 }
 
 
+
+
+
 /* =========================================================
+
    掃描主入口
+
 ========================================================= */
 
+
+
 function handleScan(
-  rawValue
+
+  rawValue,
+
+  source = 'scanner'
+
 ) {
 
+
+
   const value =
-    normalizeBarcode(
-      rawValue
-    );
+
+    normalizeBarcode(rawValue);
 
 
-  if (!value) {
-    return;
-  }
 
-
-  if (busy) {
-    return;
-  }
-
-
-  if (learningMode) {
-
-    handleLearningBarcode(
-      value
-    );
-
-    return;
-  }
 
 
   if (
-    barcodeMap[value]
+
+    !value ||
+
+    busy
+
   ) {
 
-    handleKnownProductScan(
-      value
-    );
+
 
     return;
+
+
+
   }
 
 
-  lookupTracking(
+
+
+
+  /*
+
+    新品學習中
+
+  */
+
+  if (learningMode) {
+
+
+
+    handleLearningBarcode(
+
+      value
+
+    );
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    已知商品
+
+  */
+
+  if (
+
+    barcodeMap[value]
+
+  ) {
+
+
+
+    handleKnownProductScan(
+
+      value
+
+    );
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    =====================================================
+
+    託運單
+
+    一律 12 碼純數字
+
+    =====================================================
+
+  */
+
+
+
+  if (
+
+    /^\d{12}$/.test(value)
+
+  ) {
+
+
+
+    lookupTracking(
+
+      value
+
+    );
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    =====================================================
+
+    已經掃過託運單，
+
+    而且有新品尚未建立條碼
+
+    =====================================================
+
+  */
+
+
+
+  const unknownName =
+
+    getFirstUnknownRequiredItem();
+
+
+
+
+
+  if (
+
+    currentOrders.length > 0 &&
+
+    unknownName
+
+  ) {
+
+
+
+    startLearning(
+
+      unknownName,
+
+      value
+
+    );
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    相機誤讀：
+
+    直接忽略，不洗版最近掃描。
+
+  */
+
+  if (
+
+    source === 'camera'
+
+  ) {
+
+
+
+    return;
+
+  }
+
+
+
+
+
+  /*
+
+    掃碼槍才顯示錯誤
+
+  */
+
+  showError(
+
+    '無法辨識條碼',
+
     value
+
   );
+
+
+
 }
 
 
+
+
+
 /* =========================================================
+
    託運單
+
 ========================================================= */
 
-async function lookupTracking(trackingNumber) {
-  if (batchCompleted) {
-    clearBatch(false);
+
+
+async function lookupTracking(
+
+  trackingNumber
+
+) {
+
+
+
+  /*
+
+    前端再次保險：
+
+    託運單必須是12碼純數字
+
+  */
+
+  if (
+
+    !/^\d{12}$/.test(
+
+      trackingNumber
+
+    )
+
+  ) {
+
+
+
+    return;
+
+
+
   }
+
+
+
+
+
+  if (batchCompleted) {
+
+
+
+    clearBatch(false);
+
+
+
+  }
+
+
+
+
 
   busy = true;
 
+
+
+
+
   setStatus(
+
     'waiting',
+
     '查詢託運單',
+
     trackingNumber
+
   );
 
+
+
+
+
   try {
-    const result = await apiCall('lookupTracking', {
-      tracking: trackingNumber
-    });
+
+
+
+    /*
+
+      注意：
+
+
+
+      Apps Script API 名稱是
+
+      lookupTrackingNumber
+
+
+
+      參數名稱也是
+
+      trackingNumber
+
+    */
+
+    const result =
+
+      await apiCall(
+
+        'lookupTrackingNumber',
+
+        {
+
+          trackingNumber:
+
+            trackingNumber
+
+        }
+
+      );
+
+
+
+
 
     busy = false;
+
+
+
+
 
     if (!result.ok) {
-      const unknownName = getFirstUnknownRequiredItem();
 
-      if (unknownName) {
-        startLearning(unknownName, trackingNumber);
-        return;
-      }
+
 
       showError(
+
         '找不到託運單',
-        result.message || trackingNumber
+
+        result.message ||
+
+        trackingNumber
+
       );
+
+
+
+
 
       addHistory(
+
         trackingNumber,
-        '❌ ' + (result.message || '找不到託運單'),
+
+        '❌ ' +
+
+        (
+
+          result.message ||
+
+          '找不到託運單'
+
+        ),
+
         'error'
+
       );
 
+
+
+
+
       return;
+
+
+
     }
 
-    addTrackingResult(result);
-  } catch (error) {
+
+
+
+
+    addTrackingResult(
+
+      result
+
+    );
+
+
+
+  }
+
+
+
+  catch (error) {
+
+
+
     busy = false;
 
+
+
+
+
     showError(
+
       '查詢失敗',
-      error.message || String(error)
+
+      error.message ||
+
+      String(error)
+
     );
+
+
+
   }
+
+
+
 }
 
 
 
+
+
 /* =========================================================
+
    加入託運單
+
 ========================================================= */
 
+
+
 function addTrackingResult(
+
   result
+
 ) {
 
+
+
   const duplicate =
+
     currentOrders.some(
+
       order =>
+
         order.trackingNumber ===
+
         result.trackingNumber
+
     );
+
+
+
 
 
   if (duplicate) {
 
+
+
     showError(
+
       '重複託運單',
+
       result.trackingNumber
+
     );
 
+
+
     return;
+
   }
+
+
+
 
 
   currentOrders.push({
 
+
+
     trackingNumber:
+
       result.trackingNumber,
 
+
+
     rawProductText:
+
       result.rawProductText,
 
+
+
     items:
+
       result.items || [],
 
+
+
     ignoredItems:
+
       result.ignoredItems || []
+
+
 
   });
 
 
+
+
+
   (result.items || [])
+
     .forEach(
+
       function(item) {
 
+
+
         const name =
+
           normalizeProductName(
+
             item.productName
+
           );
 
 
+
+
+
         if (
+
           !requiredItems[name]
+
         ) {
+
+
 
           requiredItems[name] = {
 
+
+
             shippingName:
+
               name,
 
+
+
             requiredQty:
+
               0
 
+
+
           };
+
         }
+
+
+
 
 
         requiredItems[name]
+
           .requiredQty +=
+
             Number(
+
               item.qty || 0
+
             );
 
 
+
+
+
         if (
+
           scannedItems[name] ===
+
           undefined
+
         ) {
 
+
+
           scannedItems[name] = 0;
+
         }
 
+
+
       }
+
     );
+
+
+
 
 
   (result.ignoredItems || [])
+
     .forEach(
+
       function(item) {
+
+
 
         ignoredItems.push({
 
+
+
           trackingNumber:
+
             result.trackingNumber,
 
+
+
           raw:
+
             item.raw,
 
+
+
           reason:
+
             item.reason
+
+
 
         });
 
+
+
       }
+
     );
+
+
+
 
 
   playShortBeep();
 
 
+
+
+
   setStatus(
+
     'waiting',
+
     '託運單已加入',
+
     result.rawProductText
+
   );
+
+
+
 
 
   addHistory(
+
     result.trackingNumber,
+
     '✅ ' +
+
       result.rawProductText,
+
     'ok'
+
   );
+
+
+
 
 
   renderAll();
 
 
+
+
+
   if (
+
     getTotalRequiredQty() === 0
+
   ) {
+
+
 
     completeBatchIfReady();
 
+
+
     return;
+
   }
 
 
+
+
+
   const unknown =
+
     getFirstUnknownRequiredItem();
+
+
+
 
 
   if (unknown) {
 
+
+
     setStatus(
+
       'learning',
+
       '新品尚未建檔',
+
       '請掃描 ' +
+
       unknown +
+
       ' 的商品條碼'
+
     );
 
+
+
   }
+
   else {
 
+
+
     setStatus(
+
       'waiting',
+
       '請掃描商品',
+
       '依下方數量逐件掃描'
+
     );
 
+
+
   }
+
 }
 
 
+
+
+
 /* =========================================================
+
    商品掃描
+
 ========================================================= */
 
+
+
 function handleKnownProductScan(
+
   barcode
+
 ) {
 
+
+
   if (
+
     currentOrders.length === 0
+
   ) {
 
+
+
     showError(
+
       '請先掃託運單',
+
       barcodeMap[barcode]
+
         .shippingName
+
     );
 
+
+
     return;
+
   }
+
+
+
 
 
   const product =
+
     barcodeMap[barcode];
 
 
+
+
+
   const name =
+
     normalizeProductName(
+
       product.shippingName
+
     );
+
+
+
 
 
   if (
+
     !requiredItems[name]
+
   ) {
 
+
+
     showError(
+
       '🚨 商品錯誤',
+
       '本批不需要 ' +
+
       name
+
     );
+
+
+
 
 
     addHistory(
+
       barcode,
+
       '❌ 錯誤商品 ' +
+
       name,
+
       'error'
+
     );
 
 
+
+
+
     return;
+
   }
+
+
+
 
 
   const required =
+
     requiredItems[name]
+
       .requiredQty;
 
 
+
+
+
   const scanned =
+
     scannedItems[name] || 0;
 
 
+
+
+
   if (
+
     scanned >= required
+
   ) {
 
+
+
     showError(
+
       '🚨 數量超過',
+
       name +
+
       ' 已完成 ' +
+
       scanned +
+
       '/' +
+
       required
+
     );
 
 
+
+
+
     return;
+
   }
 
 
+
+
+
   scannedItems[name] =
+
     scanned + 1;
+
+
+
 
 
   playShortBeep();
 
 
+
+
+
   setStatus(
+
     'success',
+
     '商品正確',
+
     name +
+
     '　' +
+
     scannedItems[name] +
+
     '/' +
+
     required
+
   );
+
+
+
 
 
   addHistory(
+
     barcode,
+
     '✅ ' +
+
       name +
+
       ' ' +
+
       scannedItems[name] +
+
       '/' +
+
       required,
+
     'ok'
+
   );
+
+
+
 
 
   renderAll();
 
 
+
+
+
   completeBatchIfReady();
+
 }
 
 
+
+
+
 /* =========================================================
+
    新品學習
+
 ========================================================= */
+
+
 
 function getFirstUnknownRequiredItem() {
 
+
+
   const names =
+
     Object.keys(
+
       requiredItems
+
     );
 
 
+
+
+
   for (
+
     let i = 0;
+
     i < names.length;
+
     i++
+
   ) {
 
+
+
     const name =
+
       names[i];
 
 
+
+
+
     if (
+
       !shippingNameMap[name] ||
+
       shippingNameMap[name]
+
         .length === 0
+
     ) {
 
+
+
       return name;
+
     }
 
 
+
+
+
     const hasBarcode =
+
       shippingNameMap[name]
+
         .some(
+
           product =>
+
             !!normalizeBarcode(
+
               product.barcode
+
             )
+
         );
+
+
+
 
 
     if (!hasBarcode) {
 
+
+
       return name;
+
     }
 
+
+
   }
+
+
+
 
 
   return '';
+
 }
+
+
+
 
 
 function startLearning(
+
   shippingName,
+
   barcode
+
 ) {
+
+
 
   learningMode = true;
 
+
+
   pendingLearningName =
+
     shippingName;
 
+
+
   pendingLearningBarcode =
+
     barcode;
 
 
+
+
+
   document
+
     .getElementById(
+
       'learnName'
+
     )
+
     .textContent =
+
       shippingName;
 
 
+
+
+
   document
+
     .getElementById(
+
       'learnBarcode'
+
     )
+
     .textContent =
+
       barcode;
 
 
+
+
+
   document
+
     .getElementById(
+
       'learningBox'
+
     )
+
     .classList.add(
+
       'show'
+
     );
 
 
+
+
+
   setStatus(
+
     'learning',
+
     '確認新品條碼',
+
     shippingName
+
   );
 
 
+
+
+
   playLearningBeep();
+
 }
+
+
+
 
 
 function handleLearningBarcode(
+
   barcode
+
 ) {
 
+
+
   pendingLearningBarcode =
+
     barcode;
 
 
+
+
+
   document
+
     .getElementById(
+
       'learnBarcode'
+
     )
+
     .textContent =
+
       barcode;
+
 }
 
 
+
+
+
 async function confirmLearning() {
-  if (!pendingLearningName || !pendingLearningBarcode) {
+
+  if (
+    !pendingLearningName ||
+    !pendingLearningBarcode
+  ) {
     return;
   }
 
-  const learnedName = pendingLearningName;
-  const learnedBarcode = pendingLearningBarcode;
+  const learnedName =
+    pendingLearningName;
+
+  const learnedBarcode =
+    pendingLearningBarcode;
 
   busy = true;
 
   try {
-    const result = await apiCall('learnProduct', {
-      shippingName: learnedName,
-      barcode: learnedBarcode
-    });
+
+    const result = await apiCall(
+      'learnProduct',
+      {
+        shippingName: learnedName,
+        barcode: learnedBarcode
+      }
+    );
 
     busy = false;
 
     if (!result.ok) {
+
       showError(
-        result.conflict ? '條碼衝突' : '無法建立',
-        result.message
+        result.conflict
+          ? '條碼衝突'
+          : '無法建立',
+        result.message || '建立失敗'
       );
+
       return;
     }
 
@@ -1952,10 +4501,17 @@ async function confirmLearning() {
 
     await reloadBarcodeMap();
 
-    if (barcodeMap[learnedBarcode]) {
-      handleKnownProductScan(learnedBarcode);
+    if (
+      barcodeMap[learnedBarcode]
+    ) {
+      handleKnownProductScan(
+        learnedBarcode
+      );
     }
-  } catch (error) {
+
+  }
+  catch (error) {
+
     busy = false;
 
     showError(
@@ -1966,110 +4522,212 @@ async function confirmLearning() {
 }
 
 
-
 function cancelLearning() {
+
+
 
   learningMode = false;
 
+
+
   pendingLearningName = '';
+
+
 
   pendingLearningBarcode = '';
 
 
+
+
+
   document
+
     .getElementById(
+
       'learningBox'
+
     )
+
     .classList.remove(
+
       'show'
+
     );
 
+
+
 }
+
+
+
 
 
 /* =========================================================
+
    完成
+
 ========================================================= */
+
+
 
 function isBatchComplete() {
 
+
+
   const names =
+
     Object.keys(
+
       requiredItems
+
     );
+
+
+
 
 
   if (
+
     names.length === 0
+
   ) {
 
+
+
     return (
+
       currentOrders.length > 0
+
     );
+
   }
 
 
+
+
+
   return names.every(
+
     function(name) {
 
+
+
       return (
+
         (
+
           scannedItems[name] ||
+
           0
+
         )
+
         >=
+
         (
+
           requiredItems[name]
+
             .requiredQty ||
+
           0
+
         )
+
       );
 
+
+
     }
+
   );
+
 }
+
+
+
 
 
 function completeBatchIfReady() {
 
+
+
   if (
+
     !isBatchComplete()
+
   ) {
+
     return;
+
   }
+
+
+
 
 
   batchCompleted = true;
 
 
+
+
+
   setStatus(
+
     'success',
+
     '✅ 本批完成',
+
     getTotalRequiredQty() === 0
+
       ? '箱裝商品，不需逐件掃描'
+
       : '所有商品數量正確'
+
   );
+
+
+
 
 
   playCompleteSound();
 
 
+
+
+
   addHistory(
+
     '',
+
     '✅ 本批完成',
+
     'ok'
+
   );
 
 
+
+
+
   writeCompletionLog();
+
 }
 
 
+
+
+
 /* =========================================================
+
    完成紀錄
+
 ========================================================= */
 
+
+
 async function writeCompletionLog() {
+
   const trackingNumbers =
     currentOrders.map(
       order => order.trackingNumber
@@ -2082,36 +4740,45 @@ async function writeCompletionLog() {
 
   const items = [];
 
-  Object.keys(requiredItems).forEach(
-    function(name) {
-      const product =
-        getProductByShippingName(name);
+  Object.keys(requiredItems)
+    .forEach(
+      function(name) {
 
-      items.push({
-        shippingName: name,
-        productCode:
-          product
-            ? product.productCode
-            : '',
-        requiredQty:
-          requiredItems[name].requiredQty,
-        scannedQty:
-          scannedItems[name] || 0
-      });
-    }
-  );
+        const product =
+          getProductByShippingName(name);
+
+        items.push({
+          shippingName: name,
+          productCode:
+            product
+              ? product.productCode
+              : '',
+          requiredQty:
+            requiredItems[name].requiredQty,
+          scannedQty:
+            scannedItems[name] || 0
+        });
+      }
+    );
 
   if (items.length === 0) {
     return;
   }
 
   try {
-    await apiCall('logBatchCompletion', {
-      trackingNumbers,
-      rawProductTexts: rawTexts,
-      items
-    });
-  } catch (error) {
+
+    await apiCall(
+      'logBatchCompletion',
+      {
+        trackingNumbers,
+        rawProductTexts: rawTexts,
+        items
+      }
+    );
+
+  }
+  catch (error) {
+
     addHistory(
       '',
       '⚠️ 完成紀錄寫入失敗：' +
@@ -2122,12 +4789,21 @@ async function writeCompletionLog() {
 }
 
 
-
 /* =========================================================
    商品對照
 ========================================================= */
 
+
+/* =========================================================
+
+   商品對照
+
+========================================================= */
+
+
+
 async function reloadBarcodeMap(callback) {
+
   setStatus(
     'waiting',
     '更新商品資料',
@@ -2135,23 +4811,31 @@ async function reloadBarcodeMap(callback) {
   );
 
   try {
-    const result = await apiCall('getBarcodeMap');
+
+    const result =
+      await apiCall(
+        'getBarcodeMap'
+      );
 
     if (!result.ok) {
+
       showError(
         '商品資料錯誤',
-        result.message
+        result.message || '無法讀取商品資料'
       );
+
       return;
     }
 
-    products = result.products || [];
+    products =
+      result.products || [];
 
     barcodeMap = {};
     shippingNameMap = {};
 
     products.forEach(
       function(product) {
+
         const name =
           normalizeProductName(
             product.shippingName
@@ -2166,15 +4850,18 @@ async function reloadBarcodeMap(callback) {
           shippingNameMap[name] = [];
         }
 
-        shippingNameMap[name].push(product);
+        shippingNameMap[name]
+          .push(product);
 
         if (barcode) {
-          barcodeMap[barcode] = product;
+          barcodeMap[barcode] =
+            product;
         }
       }
     );
 
     if (currentOrders.length === 0) {
+
       setStatus(
         'waiting',
         '系統已就緒',
@@ -2186,807 +4873,1599 @@ async function reloadBarcodeMap(callback) {
 
     renderAll();
 
-    if (typeof callback === 'function') {
+    if (
+      typeof callback === 'function'
+    ) {
       callback();
     }
 
     return result;
-  } catch (error) {
+
+  }
+  catch (error) {
+
     showError(
       '載入失敗',
       error.message || String(error)
     );
+
     throw error;
   }
 }
 
 
-
 function getProductByShippingName(
+
   name
+
 ) {
 
+
+
   const list =
+
     shippingNameMap[
+
       normalizeProductName(
+
         name
+
       )
+
     ];
 
 
+
+
+
   return (
+
     list &&
+
     list.length
+
       ? list[0]
+
       : null
+
   );
+
 }
 
 
+
+
+
 /* =========================================================
+
    清除
+
 ========================================================= */
 
+
+
 function clearBatch(
+
   showMessage = true
+
 ) {
 
+
+
   currentOrders = [];
+
   requiredItems = {};
+
   scannedItems = {};
+
   ignoredItems = [];
+
   batchCompleted = false;
+
+
+
 
 
   cancelLearning();
 
 
+
+
+
   renderAll();
+
+
+
 
 
   if (showMessage) {
 
+
+
     setStatus(
+
       'waiting',
+
       '批次已清除',
+
       cameraRunning
+
         ? '請掃描下一張託運單'
+
         : '請用掃碼槍掃描下一張託運單'
+
     );
 
+
+
   }
+
 }
+
+
+
 
 
 /* =========================================================
+
    畫面
+
 ========================================================= */
+
+
 
 function renderAll() {
 
+
+
   renderSummary();
+
   renderItems();
+
   renderOrders();
+
   renderIgnored();
+
   renderHistory();
 
+
+
 }
+
+
+
 
 
 function renderSummary() {
 
+
+
   document
+
     .getElementById(
+
       'orderCount'
+
     )
+
     .textContent =
+
       currentOrders.length;
 
 
+
+
+
   document
+
     .getElementById(
+
       'requiredCount'
+
     )
+
     .textContent =
+
       getTotalRequiredQty();
 
 
+
+
+
   document
+
     .getElementById(
+
       'scannedCount'
+
     )
+
     .textContent =
+
       getTotalScannedQty();
+
 }
+
+
+
 
 
 function renderItems() {
 
+
+
   const area =
+
     document.getElementById(
+
       'itemsArea'
+
     );
+
+
+
 
 
   const names =
+
     Object.keys(
+
       requiredItems
+
     );
 
 
+
+
+
   if (
+
     names.length === 0
+
   ) {
 
+
+
     area.innerHTML =
+
       '<div class="empty">' +
+
       (
+
         currentOrders.length
+
           ? '沒有需要逐件掃描的商品'
+
           : '尚未掃描託運單'
+
       ) +
+
       '</div>';
 
 
+
+
+
     return;
+
   }
+
+
+
 
 
   area.innerHTML = '';
 
 
+
+
+
   names.forEach(
+
     function(name) {
 
+
+
       const required =
+
         requiredItems[name]
+
           .requiredQty ||
+
         0;
+
+
+
 
 
       const scanned =
+
         scannedItems[name] ||
+
         0;
 
 
+
+
+
       const done =
+
         scanned >= required;
 
 
+
+
+
       const product =
+
         getProductByShippingName(
+
           name
+
         );
+
+
+
 
 
       const code =
+
         product
+
           ? product.productCode ||
+
             '未填商品代碼'
+
           : '尚未建立對照';
 
 
+
+
+
       const percent =
+
         required > 0
+
           ? Math.min(
+
               100,
+
               scanned /
+
               required *
+
               100
+
             )
+
           : 100;
 
 
+
+
+
       const div =
+
         document.createElement(
+
           'div'
+
         );
+
+
+
 
 
       div.className =
+
         'item' +
+
         (
+
           done
+
             ? ' done'
+
             : ''
+
         );
 
 
+
+
+
       div.innerHTML = `
+
         <div class="item-top">
+
+
 
           <div>
 
+
+
             <div class="item-name">
+
               ${escapeHtml(name)}
+
             </div>
+
+
 
             <div class="item-code">
+
               ${escapeHtml(code)}
+
             </div>
 
+
+
           </div>
+
+
 
           <div class="item-count">
+
             ${scanned}/${required}
+
           </div>
 
+
+
         </div>
+
+
 
         <div class="progress">
 
+
+
           <div
+
             class="progress-bar"
+
             style="width:${percent}%"
+
           ></div>
 
+
+
         </div>
+
       `;
 
 
+
+
+
       area.appendChild(
+
         div
+
       );
 
+
+
     }
+
   );
+
 }
+
+
+
 
 
 function renderOrders() {
 
+
+
   const area =
+
     document.getElementById(
+
       'ordersArea'
+
     );
 
 
+
+
+
   if (
+
     currentOrders.length === 0
+
   ) {
 
+
+
     area.innerHTML =
+
       '<div class="empty">尚未掃描</div>';
 
+
+
     return;
+
   }
+
+
+
 
 
   area.innerHTML = '';
 
 
+
+
+
   currentOrders.forEach(
+
     function(order, index) {
 
+
+
       const div =
+
         document.createElement(
+
           'div'
+
         );
+
+
+
 
 
       div.className =
+
         'order-row';
 
 
+
+
+
       div.innerHTML =
+
         '<strong>' +
+
         (index + 1) +
+
         '. ' +
+
         escapeHtml(
+
           order.trackingNumber
+
         ) +
+
         '</strong><br>' +
+
         escapeHtml(
+
           order.rawProductText
+
         );
 
 
+
+
+
       area.appendChild(
+
         div
+
       );
 
+
+
     }
+
   );
+
 }
+
+
+
 
 
 function renderIgnored() {
 
+
+
   const section =
+
     document.getElementById(
+
       'ignoredSection'
+
     );
+
+
+
 
 
   const area =
+
     document.getElementById(
+
       'ignoredArea'
+
     );
 
 
+
+
+
   if (
+
     ignoredItems.length === 0
+
   ) {
 
+
+
     section.style.display =
+
       'none';
+
+
 
     area.innerHTML = '';
 
+
+
     return;
+
   }
 
 
+
+
+
   section.style.display =
+
     'block';
+
+
 
   area.innerHTML = '';
 
 
+
+
+
   ignoredItems.forEach(
+
     function(item) {
 
+
+
       const div =
+
         document.createElement(
+
           'div'
+
         );
 
 
+
+
+
       div.className =
+
         'ignored';
 
 
+
+
+
       div.textContent =
+
         item.raw +
+
         ' → 箱裝，不需逐件掃';
 
 
+
+
+
       area.appendChild(
+
         div
+
       );
 
+
+
     }
+
   );
+
 }
+
+
+
 
 
 /* =========================================================
+
    統計
+
 ========================================================= */
+
+
 
 function getTotalRequiredQty() {
 
+
+
   return Object.keys(
+
     requiredItems
+
   )
+
   .reduce(
+
     function(total, name) {
 
+
+
       return (
+
         total +
+
         Number(
+
           requiredItems[name]
+
             .requiredQty ||
+
           0
+
         )
+
       );
 
+
+
     },
+
     0
+
   );
+
 }
+
+
+
 
 
 function getTotalScannedQty() {
 
+
+
   return Object.keys(
+
     scannedItems
+
   )
+
   .reduce(
+
     function(total, name) {
 
+
+
       return (
+
         total +
+
         Number(
+
           scannedItems[name] ||
+
           0
+
         )
+
       );
 
+
+
     },
+
     0
+
   );
+
 }
 
 
+
+
+
 /* =========================================================
+
    狀態
+
 ========================================================= */
 
+
+
 function setStatus(
+
   type,
+
   title,
+
   message
+
 ) {
 
+
+
   const status =
+
     document.getElementById(
+
       'status'
+
     );
 
 
+
+
+
   status.className =
+
     'status ' +
+
     type;
 
 
+
+
+
   document
+
     .getElementById(
+
       'statusTitle'
+
     )
+
     .textContent =
+
       title || '';
 
 
+
+
+
   document
+
     .getElementById(
+
       'statusMessage'
+
     )
+
     .textContent =
+
       message || '';
+
 }
+
+
+
 
 
 function showError(
+
   title,
+
   message
+
 ) {
 
+
+
   setStatus(
+
     'error',
+
     title,
+
     message
+
   );
 
 
+
+
+
   playError();
+
 }
 
 
+
+
+
 /* =========================================================
+
    紀錄
+
 ========================================================= */
 
+
+
 function addHistory(
+
   code,
+
   message,
+
   type
+
 ) {
 
+
+
   const now =
+
     new Date();
+
+
+
 
 
   historyData.unshift({
 
+
+
     time:
+
       now.toLocaleTimeString(
+
         'zh-TW',
+
         {
+
           hour:
+
             '2-digit',
+
           minute:
+
             '2-digit',
+
           second:
+
             '2-digit'
+
         }
+
       ),
 
+
+
     code:
+
       code || '',
 
+
+
     message:
+
       message,
 
+
+
     type:
+
       type
+
+
 
   });
 
 
+
+
+
   historyData =
+
     historyData.slice(
+
       0,
+
       30
+
     );
 
 
+
+
+
   renderHistory();
+
 }
+
+
+
 
 
 function renderHistory() {
 
+
+
   const area =
+
     document.getElementById(
+
       'historyArea'
+
     );
 
 
+
+
+
   if (
+
     historyData.length === 0
+
   ) {
 
+
+
     area.innerHTML =
+
       '<div class="empty">尚無紀錄</div>';
 
+
+
     return;
+
   }
+
+
+
 
 
   area.innerHTML = '';
 
 
+
+
+
   historyData.forEach(
+
     function(item) {
 
+
+
       const div =
+
         document.createElement(
+
           'div'
+
         );
+
+
+
 
 
       div.className =
+
         'history-row ' +
+
         (
+
           item.type === 'ok'
+
             ? 'history-ok'
+
             : item.type === 'error'
+
               ? 'history-error'
+
               : 'history-info'
+
         );
 
 
+
+
+
       div.textContent =
+
         item.time +
+
         ' ｜ ' +
+
         (
+
           item.code
+
             ? item.code +
+
               ' ｜ '
+
             : ''
+
         ) +
+
         item.message;
 
 
+
+
+
       area.appendChild(
+
         div
+
       );
 
+
+
     }
+
   );
+
 }
 
 
+
+
+
 /* =========================================================
+
    音效
+
 ========================================================= */
 
+
+
 function tone(
+
   frequency,
+
   duration,
+
   volume = 0.24
+
 ) {
+
+
 
   try {
 
+
+
     const AudioContext =
+
       window.AudioContext ||
+
       window.webkitAudioContext;
 
 
+
+
+
     const ctx =
+
       new AudioContext();
 
 
+
+
+
     const oscillator =
+
       ctx.createOscillator();
 
 
+
+
+
     const gain =
+
       ctx.createGain();
 
 
+
+
+
     oscillator.connect(
+
       gain
+
     );
+
+
+
 
 
     gain.connect(
+
       ctx.destination
+
     );
+
+
+
 
 
     oscillator.frequency.value =
+
       frequency;
 
 
+
+
+
     gain.gain.setValueAtTime(
+
       volume,
+
       ctx.currentTime
+
     );
 
 
+
+
+
     gain.gain
+
       .exponentialRampToValueAtTime(
+
         0.001,
+
         ctx.currentTime +
+
         duration
+
       );
+
+
+
 
 
     oscillator.start();
 
 
+
+
+
     oscillator.stop(
+
       ctx.currentTime +
+
       duration
+
     );
+
+
 
   }
 
+
+
   catch (e) {}
 
+
+
 }
+
+
+
 
 
 function playShortBeep() {
 
+
+
   tone(
+
     1000,
+
     .08
+
   );
 
+
+
 }
+
+
+
 
 
 function playError() {
 
+
+
   tone(
+
     220,
+
     .22,
+
     .36
+
   );
 
 
+
+
+
   setTimeout(
+
     () =>
+
       tone(
+
         220,
+
         .22,
+
         .36
+
       ),
+
     250
+
   );
+
+
+
 
 
   setTimeout(
+
     () =>
+
       tone(
+
         170,
+
         .34,
+
         .4
+
       ),
+
     500
+
   );
+
+
 
 }
+
+
+
 
 
 function playCompleteSound() {
 
+
+
   tone(
+
     750,
+
     .1
+
   );
 
 
+
+
+
   setTimeout(
+
     () =>
+
       tone(
+
         1000,
+
         .12
+
       ),
+
     120
+
   );
+
+
+
 
 
   setTimeout(
+
     () =>
+
       tone(
+
         1300,
+
         .2
+
       ),
+
     260
+
   );
+
+
 
 }
+
+
+
 
 
 function playLearningBeep() {
 
+
+
   tone(
+
     600,
+
     .1
+
   );
+
+
+
 
 
   setTimeout(
+
     () =>
+
       tone(
+
         600,
+
         .1
+
       ),
+
     150
+
   );
 
+
+
 }
+
+
+
 
 
 /* =========================================================
+
    字串
+
 ========================================================= */
 
+
+
 function normalizeBarcode(
+
   value
+
 ) {
 
+
+
   return String(
+
     value || ''
+
   )
+
   .replace(/\r/g, '')
+
   .replace(/\n/g, '')
+
   .replace(/\s+/g, '')
+
   .trim();
 
+
+
 }
+
+
+
 
 
 function normalizeProductName(
+
   value
+
 ) {
 
+
+
   return String(
+
     value || ''
+
   )
+
   .replace(/（/g, '(')
+
   .replace(/）/g, ')')
+
   .replace(/\s+/g, ' ')
+
   .trim()
+
   .replace(
+
     '(★單件)',
+
     '(★單品)'
+
   );
 
+
+
 }
+
+
+
 
 
 function escapeHtml(
+
   text
+
 ) {
 
+
+
   return String(
+
     text || ''
+
   )
+
   .replace(/&/g, '&amp;')
+
   .replace(/</g, '&lt;')
+
   .replace(/>/g, '&gt;')
+
   .replace(/"/g, '&quot;')
+
   .replace(/'/g, '&#039;');
+
+
 
 }
 
+
+
 </script>
 
+
+
 </body>
+
 </html>
