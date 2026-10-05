@@ -3066,7 +3066,31 @@ const scannerInput =
 
 
 
-scannerInput.addEventListener(
+/*
+
+  掃碼槍使用 Bluetooth HID 鍵盤模式時，
+
+  手機可能會把焦點移到其他元件，導致原本只監聽
+
+  hidden input 的方式收不到掃描結果。
+
+  因此改成「全頁面鍵盤緩衝」：
+
+  掃碼槍快速送入字元，最後送 Enter 時一次送進 handleScan()。
+
+  這樣手機不必一直維持 hidden input 的焦點。
+
+*/
+
+let scannerBuffer = '';
+
+let scannerBufferTimer = null;
+
+
+
+
+
+document.addEventListener(
 
   'keydown',
 
@@ -3074,9 +3098,31 @@ scannerInput.addEventListener(
 
 
 
+    if (cameraRunning) {
+
+      return;
+
+    }
+
+
+
+
+
+    /*
+
+      不攔截 Ctrl / Alt / Meta 組合鍵，
+
+      避免影響手機或瀏覽器正常操作。
+
+    */
+
     if (
 
-      event.key !== 'Enter'
+      event.ctrlKey ||
+
+      event.altKey ||
+
+      event.metaKey
 
     ) {
 
@@ -3088,31 +3134,67 @@ scannerInput.addEventListener(
 
 
 
-    event.preventDefault();
+    if (
+
+      event.key === 'Enter'
+
+    ) {
 
 
 
+      if (!scannerBuffer) {
 
+        return;
 
-    const value =
-
-      scannerInput
-
-        .value
-
-        .trim();
+      }
 
 
 
-
-
-    scannerInput.value = '';
-
+      event.preventDefault();
 
 
 
+      const value =
 
-    if (!value) {
+        scannerBuffer.trim();
+
+
+
+      scannerBuffer = '';
+
+
+
+      if (
+
+        scannerBufferTimer
+
+      ) {
+
+        clearTimeout(
+
+          scannerBufferTimer
+
+        );
+
+        scannerBufferTimer = null;
+
+      }
+
+
+
+      if (value) {
+
+        handleScan(
+
+          value,
+
+          'scanner'
+
+        );
+
+      }
+
+
 
       return;
 
@@ -3122,13 +3204,95 @@ scannerInput.addEventListener(
 
 
 
-    handleScan(
+    /*
 
-      value,
+      只收單一字元。
 
-     'scanner'
+      掃碼槍通常會以非常高速連續送出條碼字元。
 
-    );
+    */
+
+    if (
+
+      event.key &&
+
+      event.key.length === 1
+
+    ) {
+
+
+
+      scannerBuffer +=
+
+        event.key;
+
+
+
+      if (
+
+        scannerBufferTimer
+
+      ) {
+
+        clearTimeout(
+
+          scannerBufferTimer
+
+        );
+
+      }
+
+
+
+      /*
+
+        如果掃描器沒有送 Enter，
+
+        120ms 沒有新字元也視為一筆掃描。
+
+      */
+
+      scannerBufferTimer =
+
+        setTimeout(
+
+          function() {
+
+
+
+            const value =
+
+              scannerBuffer.trim();
+
+
+
+            scannerBuffer = '';
+
+            scannerBufferTimer = null;
+
+
+
+            if (value) {
+
+              handleScan(
+
+                value,
+
+                'scanner'
+
+              );
+
+            }
+
+
+
+          },
+
+          120
+
+        );
+
+    }
 
 
 
