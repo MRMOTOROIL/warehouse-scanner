@@ -835,7 +835,7 @@
   </div>
 
   <div class="card">
-    <div class="section-title">託運單號</div>
+    <div class="section-title">託運單號 <span id="trackingNumberInline"></span></div>
     <div id="ordersArea"><div class="empty">尚未掃描</div></div>
   </div>
 
@@ -845,7 +845,7 @@
   </div>
 
   <div id="ignoredSection" class="card" style="display:none;">
-    <div class="section-title">不需逐件掃描</div>
+    <div class="section-title" style="color:#b3261e;">不需逐件掃描</div>
     <div id="ignoredArea"></div>
   </div>
 
@@ -863,17 +863,13 @@
 
 
 
-    <div class="learning-title">
-
-      新商品學習
-
-    </div>
+    <div class="learning-title">新增商品條碼</div>
 
 
 
     <div class="learning-line">
 
-      出貨名稱：
+      新增品項：
 
       <strong id="learnName"></strong>
 
@@ -2828,6 +2824,9 @@ function renderItems() {
 
 function renderOrders() {
 
+  const inline = document.getElementById("trackingNumberInline");
+  if (inline) inline.textContent = currentOrders.length ? currentOrders.map(o => o.trackingNumber).join("、") : "";
+
   const area = document.getElementById('ordersArea');
 
   if (currentOrders.length === 0) {
@@ -2942,9 +2941,7 @@ function renderIgnored() {
 
       div.textContent =
 
-        item.raw +
-
-        ' → 箱裝，不需逐件掃';
+        '此件有原廠箱 ' + item.raw;
 
 
 
