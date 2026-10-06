@@ -10,11 +10,149 @@ const LOG_SHEET_NAME = '掃碼紀錄';
 ========================================================= */
 
 function doGet() {
-  return HtmlService
-    .createTemplateFromFile('Index')
-    .evaluate()
-    .setTitle('樵玟出貨掃碼防呆')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  return jsonResponse_({
+    ok: true,
+    service: 'warehouse-scanner-api',
+    message: 'API 已啟動'
+  });
+}
+
+
+/*
+  Vercel → Apps Script API
+  Web App 必須部署為「以我執行」。
+*/
+function doPost(e) {
+
+  try {
+
+    const payload =
+      parseApiPayload_(e);
+
+    const expectedToken =
+      PropertiesService
+        .getScriptProperties()
+        .getProperty('API_TOKEN');
+
+    if (
+      expectedToken &&
+      payload.apiToken !== expectedToken
+    ) {
+      return jsonResponse_({
+        ok: false,
+        message: 'API Token 錯誤'
+      });
+    }
+
+    const action =
+      String(payload.action || '').trim();
+
+    const result =
+      dispatchApiAction_(
+        action,
+        payload
+      );
+
+    return jsonResponse_(
+      result || {
+        ok: false,
+        message: '沒有回傳結果'
+      }
+    );
+
+  }
+  catch (error) {
+
+    return jsonResponse_({
+      ok: false,
+      message:
+        error.message || String(error)
+    });
+
+  }
+}
+
+
+function dispatchApiAction_(action, payload) {
+
+  switch (action) {
+
+    case 'lookupTracking':
+    case 'lookupTrackingNumber':
+      return lookupTrackingNumber(
+        payload.trackingNumber
+      );
+
+    case 'getBarcodeMap':
+      return getBarcodeMap();
+
+    case 'learnProduct':
+      return learnProduct(
+        payload.shippingName,
+        payload.barcode
+      );
+
+    case 'addBarcodeToExistingProduct':
+      return addBarcodeToExistingProduct(
+        payload.shippingName,
+        payload.barcode
+      );
+
+    case 'logScan':
+      return logScan(
+        payload.data || payload
+      );
+
+    case 'logBatchCompletion':
+      return logBatchCompletion(
+        payload.trackingNumbers || [],
+        payload.rawProductTexts || [],
+        payload.items || []
+      );
+
+    default:
+      return {
+        ok: false,
+        message:
+          '未知 API action：' + action
+      };
+  }
+}
+
+
+function parseApiPayload_(e) {
+
+  if (
+    !e ||
+    !e.postData ||
+    !e.postData.contents
+  ) {
+    return {};
+  }
+
+  const raw =
+    e.postData.contents;
+
+  try {
+    return JSON.parse(raw);
+  }
+  catch (error) {
+    throw new Error(
+      'POST 內容不是有效 JSON'
+    );
+  }
+}
+
+
+function jsonResponse_(data) {
+
+  return ContentService
+    .createTextOutput(
+      JSON.stringify(data)
+    )
+    .setMimeType(
+      ContentService.MimeType.JSON
+    );
 }
 
 
@@ -683,12 +821,19 @@ function learnProduct(
         emptyBarcodeProduct.row;
 
 
-      sheet
-        .getRange(
-          row,
-          3
-        )
-        .setNumberFormat('@');
+      const lock =
+        LockService.getScriptLock();
+
+      lock.waitLock(10000);
+
+      try {
+
+        sheet
+          .getRange(
+            row,
+            3
+          )
+          .setNumberFormat('@');
 
 
       sheet
@@ -720,6 +865,10 @@ function learnProduct(
           new Date()
         );
 
+
+      } finally {
+        lock.releaseLock();
+      }
 
       return {
 
@@ -753,6 +902,13 @@ function learnProduct(
     sheet.getLastRow() + 1;
 
 
+  const lock2 =
+    LockService.getScriptLock();
+
+  lock2.waitLock(10000);
+
+  try {
+
   sheet
     .getRange(
       newRow,
@@ -772,6 +928,10 @@ function learnProduct(
       ]
     ]);
 
+
+  } finally {
+    lock2.releaseLock();
+  }
 
   /*
     條碼欄強制文字格式
