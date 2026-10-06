@@ -766,17 +766,6 @@
 
 
 
-    #scannerInput {
-
-      position: fixed;
-
-      left: -10000px;
-
-      top: -10000px;
-
-      opacity: 0;
-
-    }
 
 
 
@@ -1148,6 +1137,12 @@ function handleScan(rawValue, source = 'scanner') {
   const value = normalizeBarcode(rawValue);
 
   if (!value || busy) return;
+
+  /* 所有掃描輸入一律限制為純數字 */
+  if (!/^\\d+$/.test(value)) {
+    showError('掃描格式錯誤', '掃描內容必須為數字');
+    return;
+  }
 
   if (learningMode) {
     handleLearningBarcode(value);
