@@ -250,6 +250,22 @@
 
 
 
+    .battery-button {
+      margin-top: 10px;
+      min-height: 38px;
+      padding: 7px 12px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      background: rgba(255,255,255,.72);
+      color: inherit;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .battery-button:disabled {
+      opacity: .65;
+    }
+
     .status-message {
 
       margin-top: 8px;
@@ -834,6 +850,7 @@
   <div class="status waiting" id="status">
     <div id="statusTitle" class="status-title">系統啟動中</div>
     <div id="statusMessage" class="status-message">正在讀取商品資料</div>
+    <button id="batteryButton" class="battery-button" type="button" onclick="connectScannerBattery()">🔋 讀取掃描器電量</button>
   </div>
 
   <div class="card">
