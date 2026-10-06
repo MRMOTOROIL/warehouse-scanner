@@ -845,7 +845,7 @@
   </div>
 
   <div id="ignoredSection" class="card" style="display:none;">
-    <div class="section-title" style="color:#b3261e;">不需逐件掃描</div>
+    <div class="section-title" style="color:#b3261e;">此件有原廠箱</div>
     <div id="ignoredArea"></div>
   </div>
 
@@ -869,7 +869,7 @@
 
     <div class="learning-line">
 
-      新增品項：
+      新增品項
 
       <strong id="learnName"></strong>
 
@@ -2770,16 +2770,9 @@ function clearBatch(
 
 
 function renderAll() {
-renderItems();
-
+  renderItems();
   renderOrders();
-
   renderIgnored();
-
-  renderHistory();
-
-
-
 }
 
 
@@ -2834,16 +2827,8 @@ function renderOrders() {
     return;
   }
 
+  /* 託運單號已直接顯示在「託運單號」標題後方，不再重複列出。 */
   area.innerHTML = '';
-
-  currentOrders.forEach(function(order) {
-
-    const div = document.createElement('div');
-    div.className = 'order-row';
-    div.innerHTML = '<strong>' + escapeHtml(order.trackingNumber) + '</strong>';
-    area.appendChild(div);
-
-  });
 }
 
 
@@ -2939,9 +2924,7 @@ function renderIgnored() {
 
 
 
-      div.textContent =
-
-        '此件有原廠箱 ' + item.raw;
+      div.textContent = item.raw;
 
 
 
