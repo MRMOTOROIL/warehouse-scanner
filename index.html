@@ -1493,7 +1493,7 @@ function addTrackingResult(
 
         const name =
 
-          normalizeProductName(
+          normalizeShippingItemName(
 
             item.productName
 
@@ -3531,6 +3531,20 @@ function normalizeBarcode(
 
 
 
+
+
+function normalizeShippingItemName(value) {
+
+  let text = String(value || '').trim();
+
+  /* 防呆：即使 API 回傳「2*福14」，前端仍以真正商品名稱「福14」處理。 */
+  text = text.replace(/^\\d+\\s*[\\*＊]\\s*/, '');
+
+  /* 支援來源資料尾端數量格式，例如 森A091(★單品)x6 */
+  text = text.replace(/^(.+?)\\s*[xX×]\\s*\\d+$/, '$1');
+
+  return normalizeProductName(text);
+}
 
 
 function normalizeProductName(
