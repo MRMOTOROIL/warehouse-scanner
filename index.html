@@ -384,11 +384,15 @@
 
     .item-code {
 
-      margin-top: 4px;
+      margin: 0;
 
-      font-size: 15px;
+      font-size: 22px;
 
-      color: var(--sub);
+      font-weight: 800;
+
+      color: var(--text);
+
+      white-space: nowrap;
 
     }
 
@@ -1329,6 +1333,9 @@ async function lookupTracking(
 
 
 
+
+    /* 每次查到託運單後重新讀取商品條碼對照，避免使用舊的商品建檔資料。 */
+    await reloadBarcodeMap();
 
     addTrackingResult(
 
@@ -2785,9 +2792,9 @@ function renderItems() {
     div.innerHTML = `
       <div class="item-top">
         <div class="item-name">${escapeHtml(name)}</div>
+        <div class="item-code">應掃 ${required} 次，已掃 ${scanned} 次</div>
         <div class="item-count">${done ? '✓' : ''}</div>
       </div>
-      <div class="item-code">應掃 ${required} 次，已掃 ${scanned} 次</div>
     `;
 
     area.appendChild(div);
