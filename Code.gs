@@ -160,9 +160,17 @@ function jsonResponse_(data) {
    查詢託運單
    D欄 = 託運單號
    F欄 = 物品名稱
+   A欄 = 當日資料日期
+
+   本版優化：
+   1. 先只讀 A 欄，找出今天的資料範圍
+   2. 再只讀今天範圍內的 D:F
+   3. 不再每次把歷史全部 D:F 讀進來
 ========================================================= */
 
 function lookupTrackingNumber(trackingNumber) {
+
+  const startedAt = Date.now();
 
   trackingNumber = normalizeTracking_(trackingNumber);
 
@@ -193,14 +201,87 @@ function lookupTrackingNumber(trackingNumber) {
   }
 
   /*
-    只讀 D:F
-    values[i][0] = D 託運單號
-    values[i][2] = F 物品名稱
-  */
+    A欄先取得當日範圍。
 
-  const values = sheet
-    .getRange(2, 4, lastRow - 1, 3)
-    .getDisplayValues();
+    使用 Spreadsheet 的時區判斷「今天」，
+    避免伺服器時區與試算表日期不同造成誤判。
+  */
+  const timeZone =
+    ss.getSpreadsheetTimeZone() ||
+    Session.getScriptTimeZone() ||
+    'Asia/Taipei';
+
+  const todayKey =
+    Utilities.formatDate(
+      new Date(),
+      timeZone,
+      'yyyy-MM-dd'
+    );
+
+  const dateValues =
+    sheet
+      .getRange(2, 1, lastRow - 1, 1)
+      .getValues();
+
+  let firstTodayIndex = -1;
+  let lastTodayIndex = -1;
+
+  for (let i = 0; i < dateValues.length; i++) {
+
+    const value = dateValues[i][0];
+
+    if (!(value instanceof Date)) {
+      continue;
+    }
+
+    const key =
+      Utilities.formatDate(
+        value,
+        timeZone,
+        'yyyy-MM-dd'
+      );
+
+    if (key === todayKey) {
+
+      if (firstTodayIndex === -1) {
+        firstTodayIndex = i;
+      }
+
+      lastTodayIndex = i;
+    }
+  }
+
+  if (firstTodayIndex === -1) {
+    return {
+      ok: false,
+      message: '今天沒有出貨資料',
+      lookupMs: Date.now() - startedAt
+    };
+  }
+
+  /*
+    A欄第2列對應 index 0。
+    所以實際 Sheet row：
+      firstTodayIndex + 2
+      lastTodayIndex + 2
+
+    這裡讀取的只有「今天資料範圍」的 D:F。
+  */
+  const startRow =
+    firstTodayIndex + 2;
+
+  const numRows =
+    lastTodayIndex - firstTodayIndex + 1;
+
+  const values =
+    sheet
+      .getRange(
+        startRow,
+        4,
+        numRows,
+        3
+      )
+      .getDisplayValues();
 
   for (let i = values.length - 1; i >= 0; i--) {
 
@@ -217,31 +298,29 @@ function lookupTrackingNumber(trackingNumber) {
     if (!rawProductText) {
       return {
         ok: false,
-        message: '找到託運單，但 F 欄沒有物品名稱'
+        message: '找到託運單，但 F 欄沒有物品名稱',
+        lookupMs: Date.now() - startedAt
       };
     }
 
-    const parsed = parseOrderItems_(rawProductText);
+    const parsed =
+      parseOrderItems_(rawProductText);
 
     return {
       ok: true,
       trackingNumber: rowTracking,
       rawProductText: rawProductText,
-      row: i + 2,
-
-      /*
-        items = 需要逐件掃描的商品
-        ignoredItems = 箱裝等不需逐件掃描的項目
-      */
-
+      row: startRow + i,
       items: parsed.items,
-      ignoredItems: parsed.ignoredItems
+      ignoredItems: parsed.ignoredItems,
+      lookupMs: Date.now() - startedAt
     };
   }
 
   return {
     ok: false,
-    message: '找不到這張託運單'
+    message: '今天找不到這張託運單',
+    lookupMs: Date.now() - startedAt
   };
 }
 
@@ -264,13 +343,6 @@ function parseOrderItems_(rawText) {
     };
   }
 
-  /*
-    用 + 拆項目
-
-    例如：
-    2*(4L)森02+1*森02+2*(4L)森03
-  */
-
   const parts = text
     .split('+')
     .map(v => v.trim())
@@ -280,20 +352,6 @@ function parseOrderItems_(rawText) {
   parts.forEach(originalPart => {
 
     let part = originalPart.trim();
-
-    /*
-      =====================================================
-      只要這一個項目含「箱」
-      就只忽略這一項
-      =====================================================
-
-      例如：
-
-      1(■箱)*道達13+3*道達13
-
-      第一項忽略
-      第二項仍需掃 3 瓶
-    */
 
     if (containsBox_(part)) {
 
@@ -305,25 +363,8 @@ function parseOrderItems_(rawText) {
       return;
     }
 
-
-    /*
-      =====================================================
-      支援下列數量格式
-      =====================================================
-
-      10*福06
-      10＊福06
-      2*(4L)森02
-      1*森02
-
-      沒有明確數量：
-      森A091(★單品)
-      預設數量 1
-    */
-
     let qty = 1;
     let productName = part;
-
 
     const starMatch =
       part.match(/^(\d+)\s*[\*＊]\s*(.+)$/);
@@ -341,12 +382,6 @@ function parseOrderItems_(rawText) {
     }
 
     else {
-
-      /*
-        支援部分來源資料：
-        森A091(★單品)x6
-        森A091(★單件)x2
-      */
 
       const xMatch =
         part.match(/^(.+?)\s*[xX×]\s*(\d+)$/);
@@ -373,17 +408,6 @@ function parseOrderItems_(rawText) {
     ) {
       return;
     }
-
-
-    /*
-      不移除 (4L)
-      因為：
-
-      (4L)森02 = MG7002
-      森02     = MG6002
-
-      兩者是完全不同商品
-    */
 
     productName =
       normalizeProductName_(productName);
@@ -423,16 +447,6 @@ function containsBox_(text) {
 
   const value =
     normalizeText_(text);
-
-  /*
-    可涵蓋：
-
-    1【■箱】*福14
-    1(■箱)*道達13
-    1*【■箱20L】福20
-    1*(■箱20L)森03
-    1*【■箱24L】森02
-  */
 
   return value.includes('箱');
 }
@@ -477,16 +491,6 @@ function getBarcodeMap() {
   }
 
 
-  /*
-    A 商品代碼
-    B 出貨名稱
-    C 商品條碼
-    D 完整名稱
-    E 備註
-    F 學習來源
-    G 建立時間
-  */
-
   const values =
     sheet
       .getRange(
@@ -525,11 +529,6 @@ function getBarcodeMap() {
       const createdAt =
         normalizeText_(row[6]);
 
-
-      /*
-        出貨名稱不存在
-        這列沒有作用
-      */
 
       if (!shippingName) {
         return;
@@ -625,7 +624,9 @@ function findProductByBarcode(
 ) {
 
   barcode =
-    normalizeBarcode_(barcode);
+    normalizeBarcode_(
+      barcode
+    );
 
 
   if (!barcode) {
@@ -732,14 +733,6 @@ function learnProduct(
   }
 
 
-  /*
-    =====================================================
-    防呆 1
-    條碼已經綁定別的商品名稱
-    不允許直接覆蓋
-    =====================================================
-  */
-
   const barcodeResult =
     findProductByBarcode(
       barcode
@@ -787,14 +780,6 @@ function learnProduct(
   }
 
 
-  /*
-    =====================================================
-    防呆 2
-    出貨名稱已存在，但尚未填條碼
-    → 優先補進原本那一列
-    =====================================================
-  */
-
   const nameResult =
     findProductByShippingName(
       shippingName
@@ -835,36 +820,32 @@ function learnProduct(
           )
           .setNumberFormat('@');
 
+        sheet
+          .getRange(
+            row,
+            3
+          )
+          .setValue(
+            barcode
+          );
 
-      sheet
-        .getRange(
-          row,
-          3
-        )
-        .setValue(
-          barcode
-        );
+        sheet
+          .getRange(
+            row,
+            6
+          )
+          .setValue(
+            '自動學習'
+          );
 
-
-      sheet
-        .getRange(
-          row,
-          6
-        )
-        .setValue(
-          '自動學習'
-        );
-
-
-      sheet
-        .getRange(
-          row,
-          7
-        )
-        .setValue(
-          new Date()
-        );
-
+        sheet
+          .getRange(
+            row,
+            7
+          )
+          .setValue(
+            new Date()
+          );
 
       } finally {
         lock.releaseLock();
@@ -891,13 +872,6 @@ function learnProduct(
   }
 
 
-  /*
-    =====================================================
-    新名稱 + 新條碼
-    新增一列
-    =====================================================
-  */
-
   const newRow =
     sheet.getLastRow() + 1;
 
@@ -909,34 +883,29 @@ function learnProduct(
 
   try {
 
-  sheet
-    .getRange(
-      newRow,
-      1,
-      1,
-      7
-    )
-    .setValues([
-      [
-        '',
-        shippingName,
-        barcode,
-        '',
-        '',
-        '自動學習',
-        new Date()
-      ]
-    ]);
-
+    sheet
+      .getRange(
+        newRow,
+        1,
+        1,
+        7
+      )
+      .setValues([
+        [
+          '',
+          shippingName,
+          barcode,
+          '',
+          '',
+          '自動學習',
+          new Date()
+        ]
+      ]);
 
   } finally {
     lock2.releaseLock();
   }
 
-  /*
-    條碼欄強制文字格式
-    避免前導 0 消失
-  */
 
   sheet
     .getRange(
@@ -969,7 +938,6 @@ function learnProduct(
 
 /* =========================================================
    增加第二個條碼
-   同一商品可能有不同包裝批次條碼時使用
 ========================================================= */
 
 function addBarcodeToExistingProduct(
@@ -1000,10 +968,6 @@ function addBarcodeToExistingProduct(
     };
   }
 
-
-  /*
-    防止條碼被其他商品使用
-  */
 
   const barcodeCheck =
     findProductByBarcode(
@@ -1386,11 +1350,6 @@ function normalizeProductName_(value) {
       .trim();
 
 
-  /*
-    僅統一空白與括號字型
-    不可移除產品識別資訊，例如 (4L)
-  */
-
   text =
     text
       .replace(/（/g, '(')
@@ -1398,15 +1357,6 @@ function normalizeProductName_(value) {
       .replace(/\s+/g, ' ')
       .trim();
 
-
-  /*
-    目前來源有：
-    森A091(★單品)
-    森A091(★單件)
-
-    若你確認兩者是同一商品，
-    在這裡統一。
-  */
 
   text =
     text.replace(
@@ -1434,19 +1384,8 @@ function normalizeTracking_(value) {
 
 
   return String(value)
-
-    /*
-      Google Sheet 託運單可能顯示：
-      '907845423485
-
-      掃碼槍會掃到：
-      907845423485
-    */
-
     .replace(/^'/, '')
-
     .replace(/\s+/g, '')
-
     .trim();
 }
 
@@ -1466,13 +1405,9 @@ function normalizeBarcode_(value) {
 
 
   return String(value)
-
     .replace(/\r/g, '')
-
     .replace(/\n/g, '')
-
     .replace(/\s+/g, '')
-
     .trim();
 }
 
@@ -1492,18 +1427,14 @@ function normalizeText_(value) {
 
 
   return String(value)
-
     .replace(/\r/g, '')
-
     .replace(/\n/g, '')
-
     .trim();
 }
 
 
 /* =========================================================
    測試解析器
-   可在 Apps Script 編輯器直接執行
 ========================================================= */
 
 function testParser() {
