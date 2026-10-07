@@ -1134,13 +1134,13 @@ function handleScan(rawValue, source = 'scanner') {
     return;
   }
 
-  /* 已有託運單後，掃描商品 */
+  /* 已有託運單後，掃描商品：只要條碼已存在，絕對優先當作已建檔商品處理，不進入學習。 */
   if (barcodeMap[value]) {
     handleKnownProductScan(value);
     return;
   }
 
-  /* 有尚未建檔商品時，未知條碼進入學習 */
+  /* 只有「本批需要的商品名稱」在商品條碼對照中沒有任何有效條碼時，才進入學習。 */
   const unknownName = getFirstUnknownRequiredItem();
 
   if (unknownName) {
@@ -2787,6 +2787,7 @@ function renderItems() {
         <div class="item-name">${escapeHtml(name)}</div>
         <div class="item-count">${done ? '✓' : ''}</div>
       </div>
+      <div class="item-code">應掃 ${required} 次，已掃 ${scanned} 次</div>
     `;
 
     area.appendChild(div);
