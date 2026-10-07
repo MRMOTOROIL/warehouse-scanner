@@ -1325,8 +1325,8 @@ function addTrackingResult(
 
   /* 直接依 F 欄原始文字重新解析，確保「2*殼04」一定是應掃 2。 */
   const parsedDisplay = parseShippingItemsForDisplay(result.rawProductText || '');
-  const displayItems = parsedDisplay.items.length ? parsedDisplay.items : (result.items || []);
-  const displayIgnored = parsedDisplay.ignoredItems.length ? parsedDisplay.ignoredItems : (result.ignoredItems || []);
+  const displayItems = parsedDisplay.items.length ? parsedDisplay.items : (displayItems || []);
+  const displayIgnored = parsedDisplay.ignoredItems.length ? parsedDisplay.ignoredItems : (displayIgnored || []);
   currentOrders.push({
 
 
@@ -1345,13 +1345,13 @@ function addTrackingResult(
 
     items:
 
-      result.items || [],
+      displayItems,
 
 
 
     ignoredItems:
 
-      result.ignoredItems || []
+      displayIgnored
 
 
 
