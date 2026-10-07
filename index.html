@@ -807,31 +807,10 @@
 
 
 
-  <div class="header">
-
-    <h1 class="header-title">
-
-      樵玟 出貨掃碼
-
-    </h1>
-
-
-
-    <div class="header-sub">
-
-      託運單 → 商品 → 數量確認
-
-    </div>
-
-  </div>
-
-
-
-
 
   <div class="status waiting" id="status">
-    <div id="statusTitle" class="status-title">系統啟動中</div>
-    <div id="statusMessage" class="status-message">正在讀取商品資料</div>
+    <div id="statusTitle" class="status-title">樵玟出貨掃碼</div>
+    <div id="statusMessage" class="status-message">掃描託運單 → 掃描商品</div>
   </div>
 
   <div class="card">
@@ -2625,8 +2604,8 @@ async function reloadBarcodeMap(callback) {
 
       setStatus(
         'waiting',
-        '系統已就緒',
-        '請掃描託運單'
+        '樵玟出貨掃碼',
+        '掃描託運單 → 掃描商品'
       );
     }
 
@@ -3538,7 +3517,7 @@ function normalizeShippingItemName(value) {
   let text = String(value || '').trim();
 
   /* 防呆：即使 API 回傳「2*福14」，前端仍以真正商品名稱「福14」處理。 */
-  text = text.replace(/^\\d+\\s*[\\*＊]\\s*/, '');
+  text = text.replace(/^\d+\s*[\*＊]\s*/, '');
 
   /* 支援來源資料尾端數量格式，例如 森A091(★單品)x6 */
   text = text.replace(/^(.+?)\\s*[xX×]\\s*\\d+$/, '$1');
