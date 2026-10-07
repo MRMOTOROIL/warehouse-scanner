@@ -322,131 +322,19 @@
 
 
 
-    .item {
-
-      border: 1px solid var(--border);
-
-      border-radius: 15px;
-
-      padding: 14px;
-
-      margin-bottom: 9px;
-
-      background: #fff;
-
-    }
-
-
-
-    .item:last-child {
-
-      margin-bottom: 0;
-
-    }
-
-
-
-    .item.done {
-
-      background: #e5f5e9;
-
-      border-color: #8bc89b;
-
-    }
-
-
-
-    .item-top {
-
-      display: flex;
-
-      justify-content: space-between;
-
-      align-items: flex-start;
-
-      gap: 8px;
-
-    }
-
-
-
-    .item-name {
-
-      font-size: 24px;
-
-      font-weight: 900;
-
-      line-height: 1.25;
-
-    }
-
-
-
-    .item-code {
-
-      margin: 0;
-
-      font-size: 22px;
-
-      font-weight: 800;
-
-      color: var(--text);
-
-      white-space: nowrap;
-
-    }
-
-
-
-    .item-count {
-
-      flex-shrink: 0;
-
-      min-width: 84px;
-
-      text-align: right;
-
-      font-size: 32px;
-
-      font-weight: 900;
-
-    }
-
-
-
-    .progress {
-
-      margin-top: 10px;
-
-      width: 100%;
-
-      height: 14px;
-
-      background: #e7eaed;
-
-      border-radius: 999px;
-
-      overflow: hidden;
-
-    }
-
-
-
-    .progress-bar {
-
-      height: 100%;
-
-      width: 0;
-
-      background: #188038;
-
-      border-radius: 999px;
-
-      transition: width .15s;
-
-    }
-
-
+    .item-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 14px; }
+    .item-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .item-table th { background: #f1f3f4; font-size: 19px; font-weight: 900; padding: 11px 9px; text-align: center; border-bottom: 1px solid var(--border); }
+    .item-table th:first-child, .item-table td:first-child { text-align: left; width: 48%; }
+    .item-table th:nth-child(2), .item-table td:nth-child(2) { width: 22%; }
+    .item-table th:nth-child(3), .item-table td:nth-child(3) { width: 30%; }
+    .item-table td { padding: 13px 9px; font-size: 22px; font-weight: 800; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle; }
+    .item-table tbody tr:last-child td { border-bottom: 0; }
+    .item-table tbody tr.done { background: #e5f5e9; }
+    .table-product-name { font-size: 24px; font-weight: 900; line-height: 1.25; word-break: break-word; }
+    .table-scanned { font-size: 23px; font-weight: 900; }
+    .table-check { margin-left: 6px; font-size: 28px; font-weight: 900; color: #117333; }
+    @media (max-width: 520px) { .item-table th { font-size: 18px; } .item-table td { font-size: 21px; padding: 12px 7px; } .table-product-name { font-size: 23px; } .table-scanned { font-size: 22px; } }
 
     /* =========================
 
@@ -1435,6 +1323,10 @@ function addTrackingResult(
 
 
 
+  /* 直接依 F 欄原始文字重新解析，確保「2*殼04」一定是應掃 2。 */
+  const parsedDisplay = parseShippingItemsForDisplay(result.rawProductText || '');
+  const displayItems = parsedDisplay.items.length ? parsedDisplay.items : (result.items || []);
+  const displayIgnored = parsedDisplay.ignoredItems.length ? parsedDisplay.ignoredItems : (result.ignoredItems || []);
   currentOrders.push({
 
 
@@ -1941,11 +1833,9 @@ function handleKnownProductScan(
 
 
 
+  writeScanLog(barcode, name, required, scannedItems[name]);
+
   renderAll();
-
-
-
-
 
   completeBatchIfReady();
 
@@ -2473,6 +2363,25 @@ function completeBatchIfReady() {
 
 
 
+function writeScanLog(barcode, shippingName, requiredQty, scannedQty) {
+  const trackingNumbers = currentOrders.map(function(order) { return order.trackingNumber; });
+  const rawTexts = currentOrders.map(function(order) { return order.rawProductText; });
+
+  apiCall('logScan', {
+    data: {
+      trackingNumber: trackingNumbers.join(','),
+      rawProductText: rawTexts.join(' / '),
+      shippingName: shippingName,
+      productCode: barcodeMap[barcode] ? (barcodeMap[barcode].productCode || '') : '',
+      requiredQty: requiredQty,
+      scannedQty: scannedQty,
+      status: '掃描成功'
+    }
+  }).catch(function(error) {
+    addHistory('', '⚠️ 掃碼紀錄寫入失敗：' + (error.message || String(error)), 'error');
+  });
+}
+
 async function writeCompletionLog() {
 
   const trackingNumbers =
@@ -2766,41 +2675,27 @@ function renderAll() {
 
 
 function renderItems() {
-
   const area = document.getElementById('itemsArea');
   const names = Object.keys(requiredItems);
 
   if (names.length === 0) {
-    area.innerHTML =
-      '<div class="empty">' +
-      (currentOrders.length ? '沒有需要逐件掃描的商品' : '請先掃描託運單') +
-      '</div>';
+    area.innerHTML = '<div class="empty">' + (currentOrders.length ? '沒有需要逐件掃描的商品' : '請先掃描託運單') + '</div>';
     return;
   }
 
-  area.innerHTML = '';
-
-  names.forEach(function(name) {
-
+  const rows = names.map(function(name) {
     const required = Number(requiredItems[name].requiredQty || 0);
     const scanned = Number(scannedItems[name] || 0);
     const done = scanned >= required;
+    return '<tr class="' + (done ? 'done' : '') + '">' +
+      '<td><div class="table-product-name">' + escapeHtml(name) + '</div></td>' +
+      '<td>' + required + '</td>' +
+      '<td class="table-scanned">' + scanned + (done ? '<span class="table-check">✓</span>' : '') + '</td>' +
+      '</tr>';
+  }).join('');
 
-    const div = document.createElement('div');
-    div.className = 'item' + (done ? ' done' : '');
-
-    div.innerHTML = `
-      <div class="item-top">
-        <div class="item-name">${escapeHtml(name)}</div>
-        <div class="item-code">應掃 ${required} 次，已掃 ${scanned} 次</div>
-        <div class="item-count">${done ? '✓' : ''}</div>
-      </div>
-    `;
-
-    area.appendChild(div);
-  });
+  area.innerHTML = '<div class="item-table-wrap"><table class="item-table"><thead><tr><th>商品</th><th>數量</th><th>已掃描</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
 }
-
 
 function renderOrders() {
 
@@ -3149,7 +3044,10 @@ function showError(
 
 
 
-function addHistory() {}
+function addHistory(value, message, type) {
+  historyData.unshift({ value: value || '', message: message || '', type: type || 'info', time: new Date() });
+  if (historyData.length > 100) historyData.length = 100;
+}
 
 
 /* =========================================================
@@ -3519,6 +3417,31 @@ function normalizeBarcode(
 
 
 
+
+function parseShippingItemsForDisplay(rawText) {
+  const result = {};
+  const ignored = [];
+  const text = String(rawText || '').trim();
+  if (!text) return { items: [], ignoredItems: [] };
+
+  text.split('+').map(function(part) { return part.trim(); }).filter(Boolean).forEach(function(originalPart) {
+    if (originalPart.includes('箱')) { ignored.push({ raw: originalPart, reason: '箱裝' }); return; }
+    let productName = originalPart;
+    let qty = 1;
+    const starMatch = originalPart.match(/^(\d+)\s*[\*＊]\s*(.+)$/);
+    if (starMatch) { qty = parseInt(starMatch[1], 10); productName = starMatch[2].trim(); }
+    else {
+      const xMatch = originalPart.match(/^(.+?)\s*[xX×]\s*(\d+)$/);
+      if (xMatch) { productName = xMatch[1].trim(); qty = parseInt(xMatch[2], 10); }
+    }
+    productName = normalizeProductName(productName);
+    if (!productName || !Number.isFinite(qty) || qty <= 0) return;
+    if (!result[productName]) result[productName] = { productName: productName, qty: 0 };
+    result[productName].qty += qty;
+  });
+
+  return { items: Object.keys(result).map(function(key) { return result[key]; }), ignoredItems: ignored };
+}
 
 function normalizeShippingItemName(value) {
 
