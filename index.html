@@ -1014,6 +1014,22 @@ function handleScan(rawValue, source = 'scanner') {
     return;
   }
 
+  /*
+    本批完成後，下一支掃描若是 12 碼託運單，
+    直接開啟下一批；不能再把它當商品條碼判斷。
+  */
+  if (batchCompleted) {
+    clearBatch(false);
+
+    if (/^\d{12}$/.test(value)) {
+      lookupTracking(value);
+    } else {
+      showError('託運單號錯誤', '本批已完成，請掃描下一張 12 碼託運單');
+    }
+
+    return;
+  }
+
   /* 未掃託運單時，只接受 12 碼純數字 */
   if (currentOrders.length === 0) {
 
