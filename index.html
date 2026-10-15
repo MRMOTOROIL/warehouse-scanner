@@ -1003,11 +1003,8 @@ function handleScan(rawValue, source = 'scanner') {
 
   if (!value || busy) return;
 
-  /* 所有掃描輸入一律限制為純數字 */
-  if (!/^\d+$/.test(value)) {
-    showError('掃描格式錯誤', '掃描內容必須為數字');
-    return;
-  }
+  /* 託運單與商品分開驗證：託運單維持 12 碼數字；商品允許英數與連字號。 */
+  /* 不在此處全域限制純數字，避免攔截英數混合的商品條碼。 */
 
   if (learningMode) {
     handleLearningBarcode(value);
@@ -1039,6 +1036,12 @@ function handleScan(rawValue, source = 'scanner') {
       showError('託運單號錯誤', '請掃描 12 碼數字託運單');
     }
 
+    return;
+  }
+
+  /* 商品掃描允許數字、英文字母及常見的連字號；不接受其他誤觸鍵盤字元。 */
+  if (!/^[A-Za-z0-9-]+$/.test(value)) {
+    showError('商品條碼格式錯誤', '商品條碼僅接受英文字母、數字或連字號');
     return;
   }
 
