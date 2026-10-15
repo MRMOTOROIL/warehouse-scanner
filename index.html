@@ -1003,7 +1003,7 @@ function handleScan(rawValue, source = 'scanner') {
 
   if (!value || busy) return;
 
-  /* 託運單與商品分開驗證：託運單接受 12 或 15 碼數字；商品允許英數與連字號。 */
+  /* 託運單與商品分開驗證：託運單接受12碼數字、15碼數字、TW加13碼數字；商品允許英數與連字號。 */
   /* 不在此處全域限制純數字，避免攔截英數混合的商品條碼。 */
 
   if (learningMode) {
@@ -1012,27 +1012,27 @@ function handleScan(rawValue, source = 'scanner') {
   }
 
   /*
-    本批完成後，下一支掃描若是 12 或 15 碼託運單，
+    本批完成後，下一支掃描若是 12或15碼託運單，
     直接開啟下一批；不能再把它當商品條碼判斷。
   */
   if (batchCompleted) {
-    if (/^(?:\d{12}|\d{15})$/.test(value)) {
+    if (/^(?:\d{12}|\d{15}|TW\d{13})$/i.test(value)) {
       clearBatch(false);
       lookupTracking(value);
     } else {
-      showError('託運單號錯誤', '本批已完成，請掃描下一張 12 或 15 碼數字託運單');
+      showError('託運單號錯誤', '本批已完成，請掃描下一張 黑貓12碼、蝦皮15碼數字或TW開頭15碼託運單');
     }
 
     return;
   }
 
-  /* 未掃託運單時，只接受 12 或 15 碼純數字 */
+  /* 未掃託運單時，接受12碼數字、15碼數字或TW加13碼數字 */
   if (currentOrders.length === 0) {
 
-    if (/^(?:\d{12}|\d{15})$/.test(value)) {
+    if (/^(?:\d{12}|\d{15}|TW\d{13})$/i.test(value)) {
       lookupTracking(value);
     } else {
-      showError('託運單號錯誤', '請掃描 12 或 15 碼數字託運單');
+      showError('託運單號錯誤', '請掃描 黑貓12碼、蝦皮15碼數字或TW開頭15碼託運單');
     }
 
     return;
@@ -1082,13 +1082,13 @@ async function lookupTracking(
 
     前端再次保險：
 
-    託運單必須是12或15碼純數字
+    託運單須為12碼數字、15碼數字或TW加13碼數字
 
   */
 
   if (
 
-    !/^(?:\d{12}|\d{15})$/.test(
+    !/^(?:\d{12}|\d{15}|TW\d{13})$/i.test(
 
       trackingNumber
 
