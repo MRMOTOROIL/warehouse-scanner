@@ -86,6 +86,9 @@ function dispatchApiAction_(action, payload) {
     case 'getBarcodeMap':
       return getBarcodeMap();
 
+    case 'exportWarehouseSyncData':
+      return exportWarehouseSyncData_();
+
     case 'learnProduct':
       return learnProduct(
         payload.shippingName,
@@ -1475,4 +1478,129 @@ function testParser() {
 
     }
   );
+}
+
+
+/* =========================================================
+   匯出今日同步資料給 Vercel / Supabase
+   Google Sheets 仍是原始資料來源
+========================================================= */
+function exportWarehouseSyncData_() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const timeZone = ss.getSpreadsheetTimeZone() || 'Asia/Taipei';
+  const today = Utilities.formatDate(new Date(), timeZone, 'yyyy-MM-dd');
+
+  function dateKey(value) {
+    if (value instanceof Date) return Utilities.formatDate(value, timeZone, 'yyyy-MM-dd');
+    const text = String(value || '').trim();
+    if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(text)) {
+      const parts = text.split('-');
+      return parts[0] + '-' + parts[1].padStart(2, '0') + '-' + parts[2].padStart(2, '0');
+    }
+    return '';
+  }
+
+  function sheetRows(name, startCol, width) {
+    const sheet = ss.getSheetByName(name);
+    if (!sheet) throw new Error('找不到工作表：' + name);
+    const last = sheet.getLastRow();
+    if (last < 2) return [];
+    return sheet.getRange(2, startCol, last - 1, width).getDisplayValues();
+  }
+
+  const barcodeSheet = ss.getSheetByName(BARCODE_SHEET_NAME);
+  if (!barcodeSheet) throw new Error('找不到商品條碼對照工作表');
+  const barcodeLast = barcodeSheet.getLastRow();
+  const barcodeProducts = [];
+  if (barcodeLast >= 2) {
+    const vals = barcodeSheet.getRange(2, 1, barcodeLast - 1, 7).getValues();
+    vals.forEach((row, i) => {
+      const shippingName = String(row[1] || '').trim();
+      if (!shippingName) return;
+      const createdAt = row[6] instanceof Date ? row[6].toISOString() : null;
+      barcodeProducts.push({
+        product_code: String(row[0] || '').trim(),
+        shipping_name: shippingName,
+        barcode: String(row[2] || '').trim(),
+        full_name: String(row[3] || '').trim(),
+        note: String(row[4] || '').trim(),
+        learning_source: String(row[5] || '').trim(),
+        source_created_at: createdAt,
+        source_row: i + 2
+      });
+    });
+  }
+
+  const qiaowenSheet = ss.getSheetByName('樵玟出貨CSV檔(自動帶入)');
+  if (!qiaowenSheet) throw new Error('找不到樵玟出貨CSV檔(自動帶入)工作表');
+  const qiaowenRows = [];
+  const qLast = qiaowenSheet.getLastRow();
+  if (qLast >= 2) {
+    const dates = qiaowenSheet.getRange(2, 1, qLast - 1, 1).getValues();
+    const vals = qiaowenSheet.getRange(2, 4, qLast - 1, 3).getDisplayValues(); // D:F
+    for (let i = 0; i < vals.length; i++) {
+      if (dateKey(dates[i][0]) !== today) continue;
+      const tracking = String(vals[i][0] || '').replace(/\s+/g, '').trim();
+      const rawText = String(vals[i][2] || '').trim();
+      if (!tracking || !rawText) continue;
+      qiaowenRows.push({
+        source: 'qiaowen',
+        source_date: today,
+        source_row: i + 2,
+        tracking_number: tracking,
+        raw_product_text: rawText,
+        product_code: null,
+        required_qty: 1,
+        shipping_name: null
+      });
+    }
+  }
+
+  const shopeeSheet = ss.getSheetByName('蝦皮出貨檔(自動帶入)');
+  if (!shopeeSheet) throw new Error('找不到蝦皮出貨檔(自動帶入)工作表');
+  const shopeeRows = [];
+  const sLast = shopeeSheet.getLastRow();
+  if (sLast >= 2) {
+    const dates = shopeeSheet.getRange(2, 1, sLast - 1, 1).getValues();
+    const vals = shopeeSheet.getRange(2, 4, sLast - 1, 4).getDisplayValues(); // D:G
+    const productMap = {};
+    barcodeProducts.forEach(p => { if (p.product_code) productMap[p.product_code] = p.shipping_name; });
+    for (let i = 0; i < vals.length; i++) {
+      if (dateKey(dates[i][0]) !== today) continue;
+      const code = String(vals[i][0] || '').trim();
+      const qtyText = String(vals[i][2] || '').trim();
+      const tracking = String(vals[i][3] || '').replace(/\s+/g, '').trim();
+      if (!tracking || !code) continue;
+      const qty = Number(qtyText || 1);
+      if (!Number.isInteger(qty) || qty <= 0) {
+        throw new Error('蝦皮第 ' + (i + 2) + ' 列商品數量無效：' + qtyText);
+      }
+      const shippingName = productMap[code];
+      if (!shippingName) {
+        throw new Error('蝦皮第 ' + (i + 2) + ' 列商品代碼無法對照：' + code);
+      }
+      shopeeRows.push({
+        source: 'shopee',
+        source_date: today,
+        source_row: i + 2,
+        tracking_number: tracking,
+        raw_product_text: null,
+        product_code: code,
+        required_qty: qty,
+        shipping_name: shippingName
+      });
+    }
+  }
+
+  return {
+    ok: true,
+    source_date: today,
+    barcodeProducts: barcodeProducts,
+    shippingRows: qiaowenRows.concat(shopeeRows),
+    counts: {
+      barcodeProducts: barcodeProducts.length,
+      qiaowenRows: qiaowenRows.length,
+      shopeeRows: shopeeRows.length
+    }
+  };
 }
