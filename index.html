@@ -835,7 +835,7 @@
 
       class="btn btn-gray"
 
-      onclick="reloadBarcodeMap()"
+      onclick="syncTodayData()"
 
     >
 
@@ -2472,6 +2472,34 @@ async function writeCompletionLog() {
 
 ========================================================= */
 
+
+
+
+
+/* =========================================================
+   同步今日託運單與商品資料到 Supabase
+========================================================= */
+async function syncTodayData() {
+  if (busy) return;
+  busy = true;
+  setStatus('waiting', '同步今日資料', '正在讀取 Google Sheets 並同步至 Supabase…');
+  try {
+    const result = await apiCall('syncTodayData');
+    if (!result.ok) throw new Error(result.message || '同步失敗');
+    await reloadBarcodeMap();
+    const c = result.counts || {};
+    const message = '商品 ' + (c.barcodeProducts || 0) +
+      ' 筆；樵玟 ' + (c.qiaowenRows || 0) +
+      ' 筆；蝦皮 ' + (c.shopeeRows || 0) + ' 筆';
+    addHistory('', '✅ 今日資料同步完成：' + message, 'ok');
+    setStatus('success', '同步完成', message);
+  } catch (error) {
+    showError('同步失敗', error.message || String(error));
+    addHistory('', '❌ 同步失敗：' + (error.message || String(error)), 'error');
+  } finally {
+    busy = false;
+  }
+}
 
 
 async function reloadBarcodeMap(callback) {
