@@ -3248,25 +3248,10 @@ function tone(
 
 
 
+/* 掃描正確：不播放聲音 */
 function playShortBeep() {
-
-
-
-  tone(
-
-    1000,
-
-    .08
-
-  );
-
-
-
+  // 靜音
 }
-
-
-
-
 
 function playError() {
 
@@ -3334,102 +3319,15 @@ function playError() {
 
 
 
+/* 整批完成：不播放聲音 */
 function playCompleteSound() {
-
-
-
-  tone(
-
-    750,
-
-    .1
-
-  );
-
-
-
-
-
-  setTimeout(
-
-    () =>
-
-      tone(
-
-        1000,
-
-        .12
-
-      ),
-
-    120
-
-  );
-
-
-
-
-
-  setTimeout(
-
-    () =>
-
-      tone(
-
-        1300,
-
-        .2
-
-      ),
-
-    260
-
-  );
-
-
-
+  // 靜音
 }
 
-
-
-
-
+/* 新品學習提示：不播放聲音 */
 function playLearningBeep() {
-
-
-
-  tone(
-
-    600,
-
-    .1
-
-  );
-
-
-
-
-
-  setTimeout(
-
-    () =>
-
-      tone(
-
-        600,
-
-        .1
-
-      ),
-
-    150
-
-  );
-
-
-
+  // 靜音
 }
-
 
 
 
