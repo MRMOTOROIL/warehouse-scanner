@@ -3256,6 +3256,7 @@ function playShortBeep() {
 
 /* 錯誤提示音：播放自訂 MP3 */
 const errorAudio = new Audio('/error.mp3');
+errorAudio.volume = 0.8; // 錯誤警示音量 80%
 errorAudio.preload = 'auto';
 
 function playError() {
