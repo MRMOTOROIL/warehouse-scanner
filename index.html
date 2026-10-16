@@ -3253,70 +3253,23 @@ function playShortBeep() {
   // 靜音
 }
 
+
+/* 錯誤提示音：播放自訂 MP3 */
+const errorAudio = new Audio('/error.mp3');
+errorAudio.preload = 'auto';
+
 function playError() {
+  try {
+    errorAudio.pause();
+    errorAudio.currentTime = 0;
 
-
-
-  tone(
-
-    220,
-
-    .22,
-
-    .36
-
-  );
-
-
-
-
-
-  setTimeout(
-
-    () =>
-
-      tone(
-
-        220,
-
-        .22,
-
-        .36
-
-      ),
-
-    250
-
-  );
-
-
-
-
-
-  setTimeout(
-
-    () =>
-
-      tone(
-
-        170,
-
-        .34,
-
-        .4
-
-      ),
-
-    500
-
-  );
-
-
-
+    errorAudio.play().catch(error => {
+      console.warn('錯誤音效無法播放', error);
+    });
+  } catch (error) {
+    console.warn('錯誤音效播放異常', error);
+  }
 }
-
-
-
 
 
 /* 整批完成：不播放聲音 */
