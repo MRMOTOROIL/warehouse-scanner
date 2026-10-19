@@ -3248,40 +3248,87 @@ function tone(
 
 
 
-/* 掃描正確：不播放聲音 */
-function playShortBeep() {
-  // 靜音
+
+/* ==========================================
+   錯誤警示音：150% 增益
+   正確掃描保持靜音
+========================================== */
+
+const errorAudio = new Audio('/error.mp3');
+errorAudio.preload = 'auto';
+errorAudio.volume = 1.0;
+
+let errorAudioContext = null;
+let errorAudioSource = null;
+let errorGainNode = null;
+
+function initErrorAudio() {
+  if (errorAudioContext) return;
+
+  const AudioContextClass =
+    window.AudioContext ||
+    window.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    throw new Error('瀏覽器不支援 Web Audio API');
+  }
+
+  errorAudioContext = new AudioContextClass();
+
+  errorAudioSource =
+    errorAudioContext.createMediaElementSource(errorAudio);
+
+  errorGainNode =
+    errorAudioContext.createGain();
+
+  // 150% 增益（1.5 倍）
+  errorGainNode.gain.value = 1.5;
+
+  errorAudioSource.connect(errorGainNode);
+  errorGainNode.connect(errorAudioContext.destination);
 }
 
-
-/* 錯誤提示音：播放自訂 MP3 */
-const errorAudio = new Audio('/error.mp3');
-errorAudio.volume = 0.8; // 錯誤警示音量 80%
-errorAudio.preload = 'auto';
-
-function playError() {
+/* 錯誤時播放 MP3 */
+async function playError() {
   try {
+    initErrorAudio();
+
+    if (errorAudioContext.state === 'suspended') {
+      await errorAudioContext.resume();
+    }
+
     errorAudio.pause();
     errorAudio.currentTime = 0;
 
-    errorAudio.play().catch(error => {
-      console.warn('錯誤音效無法播放', error);
-    });
+    await errorAudio.play();
+
   } catch (error) {
-    console.warn('錯誤音效播放異常', error);
+    console.warn('錯誤警示音播放失敗：', error);
   }
 }
 
+/* 手動啟用及測試警示音 */
+async function testErrorSound() {
+  try {
+    await playError();
 
-/* 整批完成：不播放聲音 */
-function playCompleteSound() {
-  // 靜音
+    if (errorAudio.paused) {
+      alert('警示音未成功播放，請檢查手機媒體音量');
+    }
+
+  } catch (error) {
+    alert('音效測試失敗：' + error.message);
+  }
 }
 
-/* 新品學習提示：不播放聲音 */
-function playLearningBeep() {
-  // 靜音
-}
+/* 正確掃描：靜音 */
+function playShortBeep() {}
+
+/* 整批完成：靜音 */
+function playCompleteSound() {}
+
+/* 新品學習：靜音 */
+function playLearningBeep() {}
 
 
 
