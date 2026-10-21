@@ -3538,6 +3538,128 @@ function escapeHtml(
 }
 
 
+/* ========================================
+   iPhone / Samsung 實體掃碼鍵盤接收補強
+   優先取得實體按鍵代碼，減少注音干擾
+======================================== */
+
+(function () {
+  let hardwareBuffer = '';
+  let hardwareTimer = null;
+
+  const scanBox =
+    document.getElementById('scanInput');
+
+  let debug =
+    document.getElementById('scanDebug');
+
+  // 自動新增診斷資訊
+  if (!debug && scanBox) {
+    debug = document.createElement('div');
+    debug.id = 'scanDebug';
+    debug.style.cssText =
+      'padding:8px;font-size:14px;color:#555;';
+    debug.textContent = '等待掃碼器輸入';
+    scanBox.insertAdjacentElement('afterend', debug);
+  }
+
+  function physicalCharacter(code) {
+    if (/^(Digit|Numpad)[0-9]$/.test(code)) {
+      return code.slice(-1);
+    }
+
+    if (/^Key[A-Z]$/.test(code)) {
+      return code.slice(-1);
+    }
+
+    if (
+      code === 'Minus' ||
+      code === 'NumpadSubtract'
+    ) {
+      return '-';
+    }
+
+    return '';
+  }
+
+  function finishHardwareScan() {
+    clearTimeout(hardwareTimer);
+    hardwareTimer = null;
+
+    const value = hardwareBuffer;
+    hardwareBuffer = '';
+
+    if (!value) return;
+
+    if (scanBox) scanBox.value = '';
+
+    if (typeof scanTimer !== 'undefined') {
+      clearTimeout(scanTimer);
+    }
+
+    if (debug) {
+      debug.textContent =
+        '實際收到：' + value +
+        '（共 ' + value.length + ' 碼）';
+    }
+
+    if (busy) {
+      if (debug) {
+        debug.textContent +=
+          '；系統忙碌，請稍後重掃';
+      }
+      return;
+    }
+
+    handleScan(value, 'physical-keyboard');
+  }
+
+  document.addEventListener(
+    'keydown',
+    function (event) {
+      if (
+        event.ctrlKey ||
+        event.altKey ||
+        event.metaKey
+      ) return;
+
+      if (
+        event.key === 'Enter' ||
+        event.key === 'Tab' ||
+        event.code === 'NumpadEnter'
+      ) {
+        if (!hardwareBuffer) return;
+
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        finishHardwareScan();
+        return;
+      }
+
+      const ch =
+        physicalCharacter(event.code || '');
+
+      // 不支援實體按鍵代碼時，
+      // 保留原本的輸入框機制
+      if (!ch) return;
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+      hardwareBuffer += ch;
+
+      clearTimeout(hardwareTimer);
+
+      hardwareTimer = setTimeout(
+        finishHardwareScan,
+        450
+      );
+    },
+    true
+  );
+})();
+
 
 </script>
 
