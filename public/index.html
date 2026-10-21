@@ -986,7 +986,7 @@ document.addEventListener('keydown', function(event) {
 
       if (value) handleScan(value, 'scanner');
 
-    }, 120);
+    }, 400);
   }
 });
 
@@ -1022,8 +1022,11 @@ function handleScan(rawValue, source = 'scanner') {
       clearBatch(false);
       lookupTracking(value);
     } else {
-      showError('託運單號錯誤', '本批已完成，請掃描下一張 黑貓12碼、蝦皮15碼數字或TW開頭15碼託運單');
-    }
+      showError(
+  '託運單號錯誤',
+  '實際收到：' + value +
+  '（共 ' + value.length + ' 碼）'
+);
 
     return;
   }
