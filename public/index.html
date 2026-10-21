@@ -698,28 +698,6 @@
 <div class="app">
 
 
-<div class="card">
-  <div class="section-title">掃碼輸入</div>
-
-  <input
-    id="scanInput"
-    type="text"
-    inputmode="url"
-    lang="en-US"
-    autocomplete="off"
-    autocorrect="off"
-    autocapitalize="off"
-    spellcheck="false"
-    placeholder="請點此掃描託運單或商品"
-    style="
-      width:100%;
-      font-size:20px;
-      padding:12px;
-      border:2px solid #1558a6;
-      border-radius:12px;
-    "
-  >
-</div>
 
 
 
@@ -975,8 +953,6 @@ let scannerBufferTimer = null;
 
 document.addEventListener('keydown', function(event) {
 
-  if (event.target && event.target.id === 'scanInput') return;
-
   if (event.ctrlKey || event.altKey || event.metaKey) return;
 
   if (event.key === 'Enter') {
@@ -1023,34 +999,7 @@ document.addEventListener('keydown', function(event) {
 ========================================================= */
 
 
-/* 掃碼輸入框 */
-const scanInput = document.getElementById('scanInput');
-let scanTimer = null;
 
-function submitScanInput() {
-  clearTimeout(scanTimer);
-  scanTimer = null;
-
-  const value = scanInput.value.trim();
-  if (!value) return;
-
-  scanInput.value = '';
-
-  // 使用原本的託運單及商品驗證流程
-  handleScan(value, 'input');
-}
-
-scanInput.addEventListener('input', function() {
-  clearTimeout(scanTimer);
-  scanTimer = setTimeout(submitScanInput, 450);
-});
-
-scanInput.addEventListener('keydown', function(event) {
-  if (event.key === 'Enter') {
-    event.preventDefault();
-    submitScanInput();
-  }
-});
 
 
 function handleScan(rawValue, source = 'scanner') {
