@@ -1027,7 +1027,7 @@ function handleScan(rawValue, source = 'scanner') {
   '實際收到：' + value +
   '（共 ' + value.length + ' 碼）'
 );
-
+   }
     return;
   }
 
@@ -1037,7 +1037,11 @@ function handleScan(rawValue, source = 'scanner') {
     if (/^(?:\d{12}|\d{15}|TW[A-Z0-9]{13})$/i.test(value)) {
       lookupTracking(value);
     } else {
-      showError('託運單號錯誤', '請掃描 黑貓12碼、蝦皮15碼數字或TW開頭15碼託運單');
+showError(
+  '託運單號錯誤',
+  '實際收到：' + value +
+  '（共 ' + value.length + ' 碼）'
+);
     }
 
     return;
