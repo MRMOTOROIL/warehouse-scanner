@@ -4,8 +4,13 @@
 
   const STATE_KEY = 'warehouse-scanner:active-batch:v2';
   const OPERATOR_KEY = 'warehouse-scanner:last-operator:v1';
+  const OPERATOR_LIST_CACHE_KEY = 'warehouse-scanner:operator-list:v1';
+  const OPERATOR_LIST_REFRESH_MS = 15 * 60 * 1000;
+  // 首次使用的預載名單：後續以 Google Sheets 同步回來的名單為準。
+  const OPERATOR_SEED = ['智愛', '雅玟', '正喆'];
   let operatorName = '';
   let operators = [];
+  let operatorListUpdatedAt = 0;
   let operatorDialog;
   let historyDialog;
   let selectButton;
@@ -129,7 +134,10 @@
     if (!operators.length) {
       operatorDialog.content.appendChild(document.createTextNode('無法取得操作人員清單。請確認 Google Sheets「操作人員」A 欄及 Apps Script 部署。'));
     }
-    for (const name of operators) {
+    // 未完成批次的人員一定要能重新選擇，避免快取名單更新後無法復原。
+    const selectableOperators = pinnedName && !operators.includes(pinnedName)
+      ? [pinnedName, ...operators] : operators;
+    for (const name of selectableOperators) {
       operatorDialog.content.appendChild(actionButton(name, async () => {
         if (pinnedName && name !== pinnedName) return;
         operatorName = name;
@@ -153,8 +161,14 @@
       }, { disabled: Boolean(pinnedName && name !== pinnedName) }));
     }
     const retry = actionButton('重新載入名單', async () => {
-      await loadOperators();
-      showOperatorDialog();
+      retry.disabled = true;
+      const previousText = retry.textContent;
+      retry.textContent = '正在更新名單…';
+      await loadOperators(true);
+      // 如果重新載入期間已選擇人員，就不要把彈窗重新打開。
+      if (operatorDialog.overlay.style.display === 'flex') showOperatorDialog();
+      retry.textContent = previousText;
+      retry.disabled = false;
     }, { background:'#57616b' });
     operatorDialog.content.appendChild(retry);
     const backToScan = actionButton('返回掃碼', () => {
@@ -172,14 +186,50 @@
     return Object.values(snapshot?.scannedItems || {}).reduce((n, v) => n + Number(v || 0), 0);
   }
 
-  async function loadOperators() {
+  function warmOperatorsFromCache() {
+    operators = OPERATOR_SEED.slice();
+    try {
+      const cached = JSON.parse(localStorage.getItem(OPERATOR_LIST_CACHE_KEY) || 'null');
+      if (cached && Array.isArray(cached.operators)) {
+        const names = [...new Set(cached.operators.map(x => String(x || '').trim()).filter(Boolean))];
+        if (names.length) {
+          operators = names;
+          operatorListUpdatedAt = Number(cached.updatedAt) || 0;
+        }
+      }
+    } catch (error) {
+      console.warn('無法讀取操作人員快取，使用預載名單', error);
+    }
+  }
+
+  async function loadOperators(force = false) {
+    // 15 分鐘內使用已驗證的本機名單，開頁時完全不必等待 Apps Script。
+    if (!force && operatorListUpdatedAt && Date.now() - operatorListUpdatedAt < OPERATOR_LIST_REFRESH_MS) {
+      return;
+    }
     try {
       const result = await apiCall('getWarehouseOperators');
       if (!result.ok) throw new Error(result.message || '取得名單失敗');
-      operators = (result.operators || []).map(x => String(x).trim()).filter(Boolean);
+      const next = [...new Set((Array.isArray(result.operators) ? result.operators : [])
+        .map(x => String(x || '').trim()).filter(Boolean))];
+      if (!next.length) throw new Error('操作人員名單為空白');
+      const changed = JSON.stringify(operators) !== JSON.stringify(next);
+      operators = next;
+      operatorListUpdatedAt = Date.now();
+      try {
+        localStorage.setItem(OPERATOR_LIST_CACHE_KEY, JSON.stringify({
+          operators, updatedAt: operatorListUpdatedAt
+        }));
+      } catch (error) {
+        console.warn('無法保存操作人員快取', error);
+      }
+      // 只更新正在顯示的選人視窗；使用者若已選好，不可重新彈窗打斷掃碼。
+      if (changed && operatorDialog && operatorDialog.overlay.style.display === 'flex') {
+        showOperatorDialog();
+      }
     } catch (error) {
-      console.warn('無法取得操作人員', error);
-      operators = [];
+      // 伺服器超時/連線失敗時保留上次成功名單，絕不清空畫面。
+      console.warn('操作人員背景更新失敗，保留可用的本機名單', error);
     }
   }
 
@@ -523,9 +573,10 @@
   window.addEventListener('pagehide', persistBatch);
   window.addEventListener('beforeunload', persistBatch);
 
-  (async function start() {
+  (function start() {
     currentSnapshot = readSnapshot();
-    await loadOperators();
-    showOperatorDialog();
+    warmOperatorsFromCache();
+    showOperatorDialog(); // 不等待網路，即時顯示人員清單
+    void loadOperators(); // 非同步更新 Google Sheets；不阻擋手機操作
   })();
 })();
