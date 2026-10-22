@@ -157,6 +157,14 @@
       showOperatorDialog();
     }, { background:'#57616b' });
     operatorDialog.content.appendChild(retry);
+    const backToScan = actionButton('返回掃碼', () => {
+      hide(operatorDialog);
+      if (!operatorName) {
+        setStatus('waiting', '尚未選擇操作人員', '請先選擇操作人員，才可以開始掃描');
+      }
+    }, { background:'#57616b' });
+    backToScan.style.cssText += ';display:block;width:100%;margin:12px 0 0;min-height:52px';
+    operatorDialog.content.appendChild(backToScan);
     show(operatorDialog);
   }
 
@@ -225,14 +233,14 @@
     const refresh = actionButton('查詢', () => {
       if (!picker.value) return;
       selectedHistoryDate = picker.value;
-      loadHistory(selectedHistoryDate);
+      loadHistory(selectedHistoryDate, true);
     });
     refresh.style.cssText += ';font-size:14px;padding:10px 12px;margin:0;';
     toolbar.appendChild(refresh);
     return toolbar;
   }
 
-  function renderHistoryRows(rows, date) {
+  function renderHistoryRows(rows, date, sourceNote = '') {
     historyDialog.content.replaceChildren();
     historyDialog.content.appendChild(makeHistoryToolbar());
     const close = actionButton('返回掃碼', () => hide(historyDialog), {background:'#5c636e'});
@@ -240,7 +248,7 @@
     historyDialog.content.appendChild(close);
     const title = document.createElement('p');
     title.style.cssText = 'font-size:14px;color:#667;margin:8px 0';
-    title.textContent = `查詢日期：${date}。資料來源：Google Sheets「掃碼紀錄」；未完成不代表已出貨。`;
+    title.textContent = `查詢日期：${date}。${sourceNote || '資料來源：Supabase 歷史快取'}；未完成不代表已出貨。`;
     historyDialog.content.appendChild(title);
     if (!rows.length) {
       const empty = document.createElement('p');
@@ -263,38 +271,105 @@
     }
   }
 
-  async function loadHistory(date) {
+  // Server-side Supabase cache; no service-role credentials are sent to the browser.
+  const historyLocalCache = new Map();
+  async function historyRequest(mode, date) {
+    const response = await fetch('/api/warehouse-history', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      cache:'no-store',
+      body:JSON.stringify({ mode, date })
+    });
+    let result;
+    try { result = await response.json(); }
+    catch (_) { throw new Error('歷史 API 不是有效 JSON（HTTP ' + response.status + '）'); }
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || ('歷史 API HTTP ' + response.status));
+    }
+    return result;
+  }
+  function appendHistoryNotice(message, failure = false) {
+    const note = document.createElement('p');
+    note.style.cssText = 'font-size:14px;margin:6px 0;color:' + (failure ? '#b3261e' : '#526170');
+    note.textContent = message;
+    historyDialog.content.insertBefore(note, historyDialog.content.children[2] || null);
+  }
+  function mergeLocalBatch(remoteOrders, date) {
+    const rows = (remoteOrders || []).slice();
+    // 原本防漏掃設計：當日未完成批次在本機補顯示，絕不同步到伺服器。
+    if (date === taipeiDateToday() && currentOrders.length && !batchCompleted) {
+      const number = currentOrders.map(o => o.trackingNumber).join(',');
+      const keyIndex = rows.findIndex(r => r.trackingNumber === number && r.operatorName === operatorName);
+      const local = {
+        trackingNumber: number, operatorName, completedAt: null,
+        items: Object.keys(requiredItems).map(name => ({
+          name, required: Number(requiredItems[name].requiredQty || 0),
+          scanned: Number(scannedItems[name] || 0)
+        }))
+      };
+      if (keyIndex < 0) rows.unshift(local);
+      else if (!rows[keyIndex].completedAt) rows[keyIndex] = local;
+    }
+    return rows;
+  }
+  async function loadHistory(date, force = false) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
     const requestId = ++historyRequestId;
-    historyDialog.content.replaceChildren(makeHistoryToolbar());
-    const loading = document.createElement('p');
-    loading.textContent = `正在讀取 ${date} 的掃描紀錄…`;
-    historyDialog.content.appendChild(loading);
-    try {
-      const result = await apiCall('getScanHistoryByDate', {date});
-      if (requestId !== historyRequestId) return;
-      if (!result.ok) throw new Error(result.message || '讀取歷史失敗');
-      const rows = Array.isArray(result.orders) ? result.orders.slice() : [];
-      // 本機當日未完成批次：僅加入今天的歷史，不污染其他日期。
-      if (date === taipeiDateToday() && currentOrders.length && !batchCompleted) {
-        const number = currentOrders.map(o => o.trackingNumber).join(',');
-        const keyIndex = rows.findIndex(r => r.trackingNumber === number && r.operatorName === operatorName);
-        const local = {
-          trackingNumber: number, operatorName, completedAt: null,
-          items: Object.keys(requiredItems).map(name => ({name, required: Number(requiredItems[name].requiredQty || 0), scanned: Number(scannedItems[name] || 0)}))
-        };
-        if (keyIndex < 0) rows.unshift(local);
-        else if (!rows[keyIndex].completedAt) rows[keyIndex] = local;
-      }
-      renderHistoryRows(rows, date);
-    } catch (error) {
-      if (requestId !== historyRequestId) return;
+    const stillCurrent = () => requestId === historyRequestId && selectedHistoryDate === date;
+    const render = (orders, note) => {
+      if (!stillCurrent()) return;
+      renderHistoryRows(mergeLocalBatch(orders, date), date, note);
+    };
+    const setError = message => {
+      if (!stillCurrent()) return;
       historyDialog.content.replaceChildren(makeHistoryToolbar());
-      const el = document.createElement('p');
-      el.style.color = '#b3261e';
-      el.textContent = `讀取 ${date} 失敗：` + (error.message || String(error));
-      historyDialog.content.appendChild(el);
       historyDialog.content.appendChild(actionButton('返回掃碼', () => hide(historyDialog), {background:'#57616b'}));
+      appendHistoryNotice(message, true);
+    };
+    const quick = historyLocalCache.get(date);
+    if (quick && !force) render(quick.orders, 'Supabase 快取；正在檢查是否需同步');
+    else {
+      historyDialog.content.replaceChildren(makeHistoryToolbar());
+      historyDialog.content.appendChild(actionButton('返回掃碼', () => hide(historyDialog), {background:'#57616b'}));
+      appendHistoryNotice(force ? '正在更新 Google Sheets → Supabase…' : '正在讀取 Supabase 歷史…');
+    }
+    let previous = quick ? quick.orders : null;
+    try {
+      if (!force) {
+        const cached = await historyRequest('read', date);
+        if (!stillCurrent()) return;
+        if (cached.found) {
+          previous = cached.orders;
+          historyLocalCache.set(date, {orders: cached.orders, syncedAt: cached.syncedAt});
+          render(cached.orders, 'Supabase 快取，更新時間：' + formatLocal(cached.syncedAt));
+          const lastSync = Date.parse(cached.syncedAt || '');
+          // 每分鐘才重新同步；不阻擋快取的即時顯示。
+          if (Number.isFinite(lastSync) && Date.now() - lastSync < 60000) return;
+        }
+      }
+      if (!stillCurrent()) return;
+      // 首次查日期必須先做一次來源同步；後續只刷新目前選取日期。
+      const updated = await historyRequest('sync', date);
+      if (!stillCurrent()) return;
+      historyLocalCache.set(date, {orders:updated.orders, syncedAt:updated.syncedAt});
+      render(updated.orders, '已同步至 Supabase，時間：' + formatLocal(updated.syncedAt));
+    } catch (error) {
+      if (!stillCurrent()) return;
+      if (previous !== null) {
+        render(previous, 'Supabase 既有快取（同步未完成）');
+        appendHistoryNotice('⚠️ 新資料同步失敗：' + (error.message || String(error)), true);
+        return;
+      }
+      // Supabase 尚未配置或同步失敗時保留 Google Sheets 備援，不讓歷史消失。
+      try {
+        const old = await apiCall('getScanHistoryByDate', {date, force:true});
+        if (!old.ok) throw new Error(old.message || 'Google Sheets 讀取失敗');
+        if (!stillCurrent()) return;
+        render(old.orders || [], '暫時從 Google Sheets 讀取（Supabase 尚未同步）');
+        appendHistoryNotice('⚠️ Supabase 同步失敗：' + (error.message || String(error)), true);
+      } catch (fallbackError) {
+        setError('查詢失敗：' + (fallbackError.message || String(fallbackError)));
+      }
     }
   }
 
@@ -412,47 +487,34 @@
     selectButton.textContent = '選擇操作人員';
     selectButton.addEventListener('click', switchOperator);
     bottomButtons.replaceChildren(...[clearButton,historyButton,updateButton,selectButton].filter(Boolean));
-    
-const style = document.createElement('style');
-
-style.textContent = `
-  .bottom-bar .bottom-buttons {
-    display: grid !important;
-    grid-template-columns:
-      minmax(0, .65fr)
-      minmax(0, .65fr)
-      minmax(0, 1.85fr)
-      minmax(0, .9fr) !important;
-    gap: 4px !important;
+    const style = document.createElement('style');
+    style.textContent = `
+      .bottom-bar .bottom-buttons {
+        display: grid !important;
+        grid-template-columns: minmax(0,.65fr) minmax(0,.65fr) minmax(0,1.85fr) minmax(0,.9fr) !important;
+        gap: 4px !important;
+      }
+      .bottom-bar .bottom-buttons > button {
+        min-width: 0 !important;
+        width: 100% !important;
+        min-height: 58px !important;
+        padding: 12px 1px !important;
+        font-size: clamp(16px, 4.45vw, 20px) !important;
+        font-weight: 900 !important;
+        line-height: 1.15 !important;
+        white-space: nowrap !important;
+        overflow: hidden;
+      }
+      .bottom-bar .bottom-buttons > button:last-child {
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        font-size: clamp(16px, 4vw, 19px) !important;
+      }
+    `;
+    document.head.appendChild(style);
+    bottomButtons.style.gridTemplateColumns = 'minmax(0,.65fr) minmax(0,.65fr) minmax(0,1.85fr) minmax(0,.9fr)';
+    document.body.style.paddingBottom = '90px';
   }
-
-  .bottom-bar .bottom-buttons > button {
-    min-width: 0 !important;
-    width: 100% !important;
-    min-height: 58px !important;
-    padding: 12px 1px !important;
-    font-size: clamp(16px, 4.45vw, 20px) !important;
-    font-weight: 900 !important;
-    line-height: 1.15 !important;
-    white-space: nowrap !important;
-    overflow: hidden;
-  }
-
-  .bottom-bar .bottom-buttons > button:last-child {
-    white-space: normal !important;
-    overflow-wrap: anywhere;
-    font-size: clamp(16px, 4vw, 19px) !important;
-  }
-`;
-
-document.head.appendChild(style);
-
-bottomButtons.style.gridTemplateColumns =
-  'minmax(0,.65fr) minmax(0,.65fr) minmax(0,1.85fr) minmax(0,.9fr)';
-
-document.body.style.paddingBottom = '90px';
-
-}
 
   operatorDialog = makeDialog('warehouseOperatorDialog', '選擇操作人員');
   historyDialog = makeDialog('warehouseHistoryDialog', '掃描歷史');
