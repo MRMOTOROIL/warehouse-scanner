@@ -412,28 +412,46 @@
     selectButton.textContent = '選擇操作人員';
     selectButton.addEventListener('click', switchOperator);
     bottomButtons.replaceChildren(...[clearButton,historyButton,updateButton,selectButton].filter(Boolean));
-    const style = document.createElement('style');
-    style.textContent = `
-      .bottom-bar .bottom-buttons {
-        display: grid !important;
-        grid-template-columns: minmax(0,.72fr) minmax(0,.72fr) minmax(0,1.65fr) minmax(0,1.02fr) !important;
-        gap: 4px !important;
-      }
-      .bottom-bar .bottom-buttons > button {
-        min-width: 0 !important;
-        width: 100% !important;
-        padding: 12px 1px !important;
-        font-size: clamp(10px, 2.85vw, 14px) !important;
-        line-height: 1.18 !important;
-        white-space: nowrap !important;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-    `;
-    document.head.appendChild(style);
-    bottomButtons.style.gridTemplateColumns = 'minmax(0,.72fr) minmax(0,.72fr) minmax(0,1.65fr) minmax(0,1.02fr)';
-    document.body.style.paddingBottom = '90px';
+    
+const style = document.createElement('style');
+
+style.textContent = `
+  .bottom-bar .bottom-buttons {
+    display: grid !important;
+    grid-template-columns:
+      minmax(0, .65fr)
+      minmax(0, .65fr)
+      minmax(0, 1.85fr)
+      minmax(0, .9fr) !important;
+    gap: 4px !important;
   }
+
+  .bottom-bar .bottom-buttons > button {
+    min-width: 0 !important;
+    width: 100% !important;
+    min-height: 58px !important;
+    padding: 12px 1px !important;
+    font-size: clamp(16px, 4.45vw, 20px) !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    white-space: nowrap !important;
+    overflow: hidden;
+  }
+
+  .bottom-bar .bottom-buttons > button:last-child {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    font-size: clamp(16px, 4vw, 19px) !important;
+  }
+`;
+
+document.head.appendChild(style);
+
+bottomButtons.style.gridTemplateColumns =
+  'minmax(0,.65fr) minmax(0,.65fr) minmax(0,1.85fr) minmax(0,.9fr)';
+
+document.body.style.paddingBottom = '90px';
+
 
   operatorDialog = makeDialog('warehouseOperatorDialog', '選擇操作人員');
   historyDialog = makeDialog('warehouseHistoryDialog', '掃描歷史');
