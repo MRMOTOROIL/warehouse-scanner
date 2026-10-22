@@ -452,6 +452,7 @@ bottomButtons.style.gridTemplateColumns =
 
 document.body.style.paddingBottom = '90px';
 
+}
 
   operatorDialog = makeDialog('warehouseOperatorDialog', '選擇操作人員');
   historyDialog = makeDialog('warehouseHistoryDialog', '掃描歷史');
